@@ -73,11 +73,11 @@
   const maxCategory = $derived(Math.max(1, ...categories.map((c) => parseMoney(c.total))));
 </script>
 
-<svelte:head><title>Reports · Rianganizze</title></svelte:head>
+<svelte:head><title>Insights · Rialign</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h1 class="text-2xl font-bold text-ink">Reports</h1>
+    <h1 class="text-2xl font-bold text-ink">Insights</h1>
     <p class="text-sm text-ink-muted">
       {formatMonth(data.report.period.from)} – {formatMonth(data.report.period.to)}
     </p>

@@ -1,4 +1,4 @@
-# Rianganizze Design System
+# Rialign Design System
 
 Clean, minimal, cozy, calm, warm, trustworthy, modern, premium, effortless.
 It should feel like organizing your finances in a peaceful place — **not** like

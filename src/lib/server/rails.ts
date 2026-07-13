@@ -7,7 +7,7 @@ import { env } from "$env/dynamic/private";
 import type { Cookies } from "@sveltejs/kit";
 
 export const API_URL = env.API_URL ?? "http://localhost:3000";
-export const SESSION_COOKIE = env.SESSION_COOKIE ?? "rianganizze_session";
+export const SESSION_COOKIE = env.SESSION_COOKIE ?? "rialign_session";
 
 export function railsUrl(path: string): string {
   return `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;

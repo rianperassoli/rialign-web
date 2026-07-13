@@ -8,7 +8,7 @@
   let submitting = $state(false);
 </script>
 
-<svelte:head><title>Create account · Rianganizze</title></svelte:head>
+<svelte:head><title>Create account · Rialign</title></svelte:head>
 
 <h2 class="mb-4 text-lg font-semibold text-ink">Create your account</h2>
 

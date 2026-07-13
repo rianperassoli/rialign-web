@@ -1,5 +1,5 @@
 /**
- * Types mirroring the Rianganizze Rails API (`/api/v1`).
+ * Types mirroring the Rialign Rails API (`/api/v1`).
  *
  * Money values arrive as **strings** (the API serializes `decimal` columns as
  * strings to preserve precision). Use `parseMoney` from `$utils/formatting` to

@@ -4,9 +4,9 @@
   import ThemeToggle from "$components/layout/ThemeToggle.svelte";
 
   const links = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/transactions", label: "Transactions" },
-    { href: "/reports", label: "Reports" },
+    { href: "/dashboard", label: "Overview" },
+    { href: "/transactions", label: "Activity" },
+    { href: "/reports", label: "Insights" },
     { href: "/accounts", label: "Accounts" },
     { href: "/credit_cards", label: "Cards" },
     { href: "/categories", label: "Categories" }
@@ -16,7 +16,7 @@
 <header class="border-b border-edge bg-surface">
   <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
     <div class="flex items-center gap-8">
-      <a href="/dashboard" class="text-lg font-semibold tracking-tight text-brand-700">Rianganizze</a>
+      <a href="/dashboard" class="text-lg font-semibold tracking-tight text-brand-700">Rialign</a>
       <ul class="flex gap-1">
         {#each links as link (link.href)}
           {@const active = page.url.pathname.startsWith(link.href)}

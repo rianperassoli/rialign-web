@@ -67,7 +67,7 @@
   }
 </script>
 
-<svelte:head><title>Accounts · Rianganizze</title></svelte:head>
+<svelte:head><title>Accounts · Rialign</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>

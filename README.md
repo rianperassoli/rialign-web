@@ -1,6 +1,6 @@
-# Rianganizze Web
+# Rialign Web
 
-SvelteKit (Svelte 5) frontend for the Rianganizze personal-finance API.
+SvelteKit (Svelte 5) frontend for the Rialign personal-finance API.
 TypeScript (strict) · Tailwind CSS v4 · SSR · Vitest · Playwright.
 
 > **Design system:** colors, theming (light/dark/system), button semantics and
@@ -10,19 +10,19 @@ TypeScript (strict) · Tailwind CSS v4 · SSR · Vitest · Playwright.
 ## Requirements
 
 - Node 20+ (developed on Node 22)
-- The Rails API (`rianganizze-api`) running on `http://localhost:3000`
+- The Rails API (`rialign-api`) running on `http://localhost:3000`
 
 ## Getting started
 
 ```bash
-cd rianganizze-web
+cd rialign-web
 cp .env.example .env        # API_URL defaults to http://localhost:3000
 npm install
 npm run dev                 # http://localhost:5173
 ```
 
-Make sure the API is up (`cd ../rianganizze-api && docker compose up`) and seeded.
-Log in with the demo user: `demo@rianganizze.com` / `password123`.
+Make sure the API is up (`cd ../rialign-api && docker compose up`) and seeded.
+Log in with the demo user: `demo@rialign.com` / `password123`.
 
 ## Scripts
 

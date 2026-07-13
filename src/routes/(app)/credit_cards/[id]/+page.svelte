@@ -84,7 +84,7 @@
   }
 </script>
 
-<svelte:head><title>{card.name} · Invoice {formatMonth(invoice.month)} · Rianganizze</title></svelte:head>
+<svelte:head><title>{card.name} · Invoice {formatMonth(invoice.month)} · Rialign</title></svelte:head>
 
 <div class="flex items-start gap-4">
   <!-- Floating month navigation (Organizze-style side arrows) -->

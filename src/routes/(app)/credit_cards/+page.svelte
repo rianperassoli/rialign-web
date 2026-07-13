@@ -71,7 +71,7 @@
   }
 </script>
 
-<svelte:head><title>Credit cards · Rianganizze</title></svelte:head>
+<svelte:head><title>Credit cards · Rialign</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>

@@ -8,7 +8,7 @@
   let submitting = $state(false);
 </script>
 
-<svelte:head><title>Log in · Rianganizze</title></svelte:head>
+<svelte:head><title>Log in · Rialign</title></svelte:head>
 
 <h2 class="mb-4 text-lg font-semibold text-ink">Welcome back</h2>
 

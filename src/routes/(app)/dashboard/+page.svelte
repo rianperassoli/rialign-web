@@ -49,7 +49,7 @@
   const maxCategory = $derived(Math.max(1, ...topCategories.map((c) => parseMoney(c.total))));
 </script>
 
-<svelte:head><title>Dashboard · Rianganizze</title></svelte:head>
+<svelte:head><title>Overview · Rialign</title></svelte:head>
 
 <Card class="mb-6">
   <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

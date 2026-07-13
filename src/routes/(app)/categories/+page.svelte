@@ -48,7 +48,7 @@
   }
 </script>
 
-<svelte:head><title>Categories · Rianganizze</title></svelte:head>
+<svelte:head><title>Categories · Rialign</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>

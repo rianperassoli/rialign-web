@@ -7,7 +7,7 @@
   <h1 class="text-xl font-semibold text-ink">
     {page.error?.message ?? "Something went wrong"}
   </h1>
-  <a href="/dashboard" class="mt-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-    Back to dashboard
+  <a href="/dashboard" class="mt-2 rounded-xl bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800">
+    Back to overview
   </a>
 </div>

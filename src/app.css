@@ -3,7 +3,7 @@
 @plugin "@tailwindcss/forms";
 
 /*
- * Rianganizze design system — calm, warm, minimal.
+ * Rialign design system — calm, warm, minimal.
  * Brand is green (never blue); neutrals are stone (light) / zinc (dark).
  * Pages use the semantic tokens (surface/edge/ink/hover) so dark mode
  * follows the system preference with no per-component work.

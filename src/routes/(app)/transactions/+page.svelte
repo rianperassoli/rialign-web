@@ -59,10 +59,10 @@
   }
 </script>
 
-<svelte:head><title>Transactions · Rianganizze</title></svelte:head>
+<svelte:head><title>Your activity · Rialign</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
-  <h1 class="text-2xl font-bold text-ink">Transactions</h1>
+  <h1 class="text-2xl font-bold text-ink">Your activity</h1>
   <Button onclick={() => (showForm = true)}><Plus size={16} aria-hidden="true" />Add transaction</Button>
 </div>
 
