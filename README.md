@@ -3,6 +3,10 @@
 SvelteKit (Svelte 5) frontend for the Rianganizze personal-finance API.
 TypeScript (strict) · Tailwind CSS v4 · SSR · Vitest · Playwright.
 
+> **Design system:** colors, theming (light/dark/system), button semantics and
+> icon rules are documented in [DESIGN.md](./DESIGN.md). Read it before
+> touching any UI.
+
 ## Requirements
 
 - Node 20+ (developed on Node 22)
@@ -70,8 +74,8 @@ src/
     api/         client.ts (isomorphic, retry + ApiError), types.ts (API contract)
     composables/ useAuth, useTransactions, useDashboard, useAccounts (runes)
     components/  ui/ (Button, Input, Select, Card, Modal, Skeleton, Badge)
-                 finance/ (StatCard, AccountCard, TransactionList/Row/Form)
-                 layout/ (Navbar)
+                 finance/ (StatCard, AccountCard, TransactionList/Row/Form, TransferForm)
+                 layout/ (Navbar, ThemeToggle)
     server/      rails.ts (env, cookie helpers — server only)
     utils/       formatting.ts (currency/date/mask + parseMoney)
   routes/
