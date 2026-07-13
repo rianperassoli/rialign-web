@@ -1,0 +1,217 @@
+/**
+ * Types mirroring the Rianganizze Rails API (`/api/v1`).
+ *
+ * Money values arrive as **strings** (the API serializes `decimal` columns as
+ * strings to preserve precision). Use `parseMoney` from `$utils/formatting` to
+ * turn them into numbers for arithmetic, and keep the raw string for display.
+ */
+
+export type Money = string;
+export type ISODate = string; // "YYYY-MM-DD"
+export type ISODateTime = string;
+
+export type TransactionKind = "income" | "expense";
+export type AccountType = "checking" | "savings" | "cash" | "other";
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  created_at: ISODateTime;
+}
+
+export interface Account {
+  id: number;
+  name: string;
+  account_type: AccountType;
+  initial_balance: Money;
+  current_balance: Money;
+  archived: boolean;
+  created_at: ISODateTime;
+}
+
+export interface CreditCard {
+  id: number;
+  name: string;
+  credit_limit: Money;
+  closing_day: number;
+  due_day: number;
+  payment_account_id: number | null;
+  open_invoice: Money;
+  available_limit: Money;
+  archived: boolean;
+  created_at: ISODateTime;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  kind: TransactionKind;
+  color: string | null;
+  archived: boolean;
+}
+
+export interface Transaction {
+  id: number;
+  description: string;
+  kind: TransactionKind;
+  amount: Money;
+  signed_amount: Money;
+  date: ISODate;
+  paid: boolean;
+  notes: string | null;
+  category: Pick<Category, "id" | "name" | "kind" | "color"> | null;
+  account_id: number | null;
+  credit_card_id: number | null;
+  /** Present on the two legs of a transfer and on invoice-settlement legs. */
+  transfer_id: string | null;
+  /** Shared by every occurrence of an installment or fixed (monthly) series. */
+  series_id: string | null;
+  /** Set on installment legs only, e.g. 3 of 12. */
+  installment_number: number | null;
+  installment_total: number | null;
+  created_at: ISODateTime;
+}
+
+export interface CategoryTotal {
+  category_id: number;
+  name: string;
+  color: string | null;
+  total: Money;
+}
+
+export interface Dashboard {
+  period: { from: ISODate; to: ISODate };
+  totals: { income: Money; expense: Money; net: Money };
+  forecast: { income: Money; expense: Money };
+  by_category: CategoryTotal[];
+  consolidated_balance: Money;
+  accounts: Account[];
+  credit_cards: CreditCard[];
+}
+
+/** A credit card's monthly invoice: the cycle that closes in `month`. */
+export interface CreditCardInvoice {
+  month: string; // "YYYY-MM"
+  period: { from: ISODate; to: ISODate };
+  closing_date: ISODate;
+  due_date: ISODate;
+  total: Money;
+  pending: Money;
+  status: "open" | "closed" | "paid";
+  transactions: Transaction[];
+}
+
+export interface Report {
+  period: { from: ISODate; to: ISODate };
+  monthly: Array<{ month: string; income: Money; expense: Money; net: Money }>;
+  by_category: CategoryTotal[];
+}
+
+/* ---- Response envelopes ---- */
+
+export interface Pagination {
+  page: number;
+  items: number;
+  count: number;
+  pages: number;
+  next: number | null;
+  prev: number | null;
+}
+
+export interface Resource<T> {
+  data: T;
+  meta?: Record<string, unknown>;
+}
+
+export interface Collection<T> {
+  data: T[];
+  meta: { pagination: Pagination };
+}
+
+export interface AuthPayload {
+  data: { token: string; user: User };
+}
+
+export interface ApiErrorBody {
+  message: string;
+  errors: string[];
+}
+
+/* ---- Request inputs ---- */
+
+export interface TransactionFilters {
+  kind?: TransactionKind;
+  account_id?: number;
+  credit_card_id?: number;
+  category_id?: number;
+  paid?: boolean;
+  from?: ISODate;
+  to?: ISODate;
+  search?: string;
+  sort?: "date" | "amount" | "created_at";
+  direction?: "asc" | "desc";
+  page?: number;
+  items?: number;
+}
+
+export interface TransactionInput {
+  description: string;
+  kind: TransactionKind;
+  amount: number | string;
+  date: ISODate;
+  paid?: boolean;
+  notes?: string | null;
+  category_id: number;
+  account_id?: number | null;
+  credit_card_id?: number | null;
+}
+
+export interface AccountInput {
+  name: string;
+  account_type: AccountType;
+  initial_balance: number | string;
+}
+
+export interface CategoryInput {
+  name: string;
+  kind: TransactionKind;
+  color?: string | null;
+}
+
+export interface CreditCardInput {
+  name: string;
+  credit_limit: number | string;
+  closing_day: number;
+  due_day: number;
+  payment_account_id?: number | null;
+}
+
+export interface TransferInput {
+  from_account_id: number;
+  to_account_id: number;
+  amount: number | string;
+  date: ISODate;
+  description?: string;
+  notes?: string | null;
+}
+
+export interface PayInvoiceInput {
+  account_id?: number;
+  date?: ISODate;
+  /** Settle only charges up to this invoice's closing date ("YYYY-MM"). */
+  month?: string;
+}
+
+/**
+ * Turns a single submission into a monthly series:
+ *  - installments: the amount is the TOTAL, split into N legs (e.g. 12x)
+ *  - fixed_months: the amount repeats as-is for N months (rent, salary...)
+ */
+export interface SeriesOptions {
+  installments?: number;
+  fixed_months?: number;
+}
+
+/** How much of a series a DELETE removes. */
+export type DeleteScope = "one" | "future" | "series";
