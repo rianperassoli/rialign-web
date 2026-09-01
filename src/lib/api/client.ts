@@ -144,10 +144,8 @@ export function createApiClient(fetchFn: Fetch = fetch) {
     },
 
     categories: {
-      list: (kind?: "income" | "expense") =>
-        request<Collection<Category>>("GET", "/categories", { query: { kind } }),
-      create: (category: CategoryInput) =>
-        request<Resource<Category>>("POST", "/categories", { body: { category } }),
+      list: (kind?: "income" | "expense") => request<Collection<Category>>("GET", "/categories", { query: { kind } }),
+      create: (category: CategoryInput) => request<Resource<Category>>("POST", "/categories", { body: { category } }),
       update: (id: number, category: Partial<CategoryInput>) =>
         request<Resource<Category>>("PATCH", `/categories/${id}`, { body: { category } }),
       remove: (id: number) => request<void>("DELETE", `/categories/${id}`)
@@ -173,10 +171,11 @@ export function createApiClient(fetchFn: Fetch = fetch) {
 
     dashboard: {
       get: (month?: string) => request<Resource<Dashboard>>("GET", "/dashboard", { query: { month } }),
-      balances: () => request<Resource<Pick<Dashboard, "consolidated_balance" | "accounts" | "credit_cards">>>(
-        "GET",
-        "/dashboard/balances"
-      )
+      balances: () =>
+        request<Resource<Pick<Dashboard, "consolidated_balance" | "accounts" | "credit_cards">>>(
+          "GET",
+          "/dashboard/balances"
+        )
     },
 
     reports: {
@@ -184,8 +183,7 @@ export function createApiClient(fetchFn: Fetch = fetch) {
     },
 
     /** Auth endpoints used by server form actions (token-issuing). */
-    authPayload: (path: "/auth/login" | "/auth/register", body: unknown) =>
-      request<AuthPayload>("POST", path, { body })
+    authPayload: (path: "/auth/login" | "/auth/register", body: unknown) => request<AuthPayload>("POST", path, { body })
   };
 }
 

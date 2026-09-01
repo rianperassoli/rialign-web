@@ -26,14 +26,14 @@ Log in with the demo user: `demo@rialign.com` / `password123`.
 
 ## Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Dev server |
-| `npm run build` / `npm run preview` | Production build / preview |
-| `npm run check` | `svelte-check` type checking |
-| `npm run test` | Vitest unit tests |
-| `npm run test:e2e` | Playwright E2E |
-| `npm run lint` / `npm run format` | Prettier + ESLint |
+| Command                             | Purpose                      |
+| ----------------------------------- | ---------------------------- |
+| `npm run dev`                       | Dev server                   |
+| `npm run build` / `npm run preview` | Production build / preview   |
+| `npm run check`                     | `svelte-check` type checking |
+| `npm run test`                      | Vitest unit tests            |
+| `npm run test:e2e`                  | Playwright E2E               |
+| `npm run lint` / `npm run format`   | Prettier + ESLint            |
 
 ## How it works
 

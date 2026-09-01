@@ -11,6 +11,7 @@
   import Button from "$components/ui/Button.svelte";
   import Input from "$components/ui/Input.svelte";
   import Select from "$components/ui/Select.svelte";
+  import Toggle from "$components/ui/Toggle.svelte";
   import { formatCurrency, toDateInput } from "$utils/formatting";
 
   interface Props {
@@ -42,6 +43,11 @@
   let source = $state<string>(initialSource());
   let repeat = $state<"" | "installments" | "fixed">("");
   let occurrences = $state(12);
+  // Only a credit card leaves the question open: money moving through an account
+  // is settled the moment it happens, so the toggle is hidden there and paid is
+  // forced true. On a card the charge waits for the invoice, so it starts off —
+  // until the user flips it themselves (editing starts pinned to what was saved).
+  let paidPinned = $state(Boolean(transaction));
 
   let submitting = $state(false);
   let errors = $state<string[]>([]);
@@ -59,6 +65,17 @@
     ...accounts.map((a) => ({ value: `account:${a.id}`, label: `${a.name} (account)` })),
     ...(kind === "expense" ? creditCards.map((c) => ({ value: `card:${c.id}`, label: `${c.name} (card)` })) : [])
   ]);
+
+  const onCard = $derived(source.startsWith("card:"));
+
+  $effect(() => {
+    if (!onCard) {
+      paid = true;
+      paidPinned = false;
+    } else if (!paidPinned) {
+      paid = false;
+    }
+  });
 
   function validate(): string[] {
     const e: string[] = [];
@@ -141,14 +158,19 @@
     <Input label="Date" type="date" bind:value={date} required />
   </div>
 
-  <Select
-    label="Category"
-    bind:value={categoryId}
-    placeholder="Select a category"
-    options={availableCategories.map((c) => ({ value: c.id, label: c.name }))}
-  />
+  {#if onCard}
+    <Toggle bind:checked={paid} label="Settled" variant="expense" onchange={() => (paidPinned = true)} />
+  {/if}
 
-  <Select label="Account / Card" bind:value={source} options={sourceOptions} />
+  <div class="grid grid-cols-2 gap-3">
+    <Select label="Account / Card" bind:value={source} options={sourceOptions} />
+    <Select
+      label="Category"
+      bind:value={categoryId}
+      placeholder="Select a category"
+      options={availableCategories.map((c) => ({ value: c.id, label: c.name }))}
+    />
+  </div>
 
   {#if !transaction}
     <div class="grid grid-cols-2 gap-3">
@@ -179,11 +201,6 @@
         : "monthly series"} — your changes apply to this occurrence only.
     </p>
   {/if}
-
-  <label class="flex items-center gap-2 text-sm text-ink-secondary">
-    <input type="checkbox" bind:checked={paid} class="rounded border-edge text-brand-600" />
-    Already paid / settled
-  </label>
 
   <div class="flex justify-end gap-2 pt-2">
     {#if oncancel}
