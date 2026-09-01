@@ -9,12 +9,20 @@ export const load: PageServerLoad = async ({ fetch, params, url }) => {
   const month = url.searchParams.get("month") ?? undefined;
   const api = createApiClient(fetch);
   try {
-    const [card, invoice, accounts] = await Promise.all([
+    const [card, invoice, accounts, categories, creditCards] = await Promise.all([
       api.creditCards.get(id),
       api.creditCards.invoice(id, month),
-      api.accounts.list()
+      api.accounts.list(),
+      api.categories.list(),
+      api.creditCards.list()
     ]);
-    return { card: card.data, invoice: invoice.data, accounts: accounts.data };
+    return {
+      card: card.data,
+      invoice: invoice.data,
+      accounts: accounts.data,
+      categories: categories.data,
+      creditCards: creditCards.data
+    };
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) error(404, "Credit card not found");
     throw e;

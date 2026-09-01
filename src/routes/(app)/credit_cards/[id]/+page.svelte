@@ -2,10 +2,13 @@
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
+  import Pencil from "@lucide/svelte/icons/pencil";
   import Plus from "@lucide/svelte/icons/plus";
   import Search from "@lucide/svelte/icons/search";
   import { goto, invalidateAll } from "$app/navigation";
   import { ApiError, createApiClient } from "$api/client";
+  import type { Transaction, TransactionInput } from "$api/types";
+  import TransactionForm from "$components/finance/TransactionForm.svelte";
   import Badge from "$components/ui/Badge.svelte";
   import Button from "$components/ui/Button.svelte";
   import Input from "$components/ui/Input.svelte";
@@ -46,6 +49,15 @@
       (t) => t.description.toLowerCase().includes(term) || (t.category?.name.toLowerCase().includes(term) ?? false)
     );
   });
+
+  /* ---- Edit charge modal ---- */
+  let editing = $state<Transaction | null>(null);
+
+  async function saveCharge(id: number, input: TransactionInput) {
+    await api.transactions.update(id, input);
+    editing = null;
+    await invalidateAll();
+  }
 
   /* ---- Pay invoice modal ---- */
   const accountOptions = $derived(data.accounts.map((a) => ({ value: a.id, label: a.name })));
@@ -224,6 +236,14 @@
             {t.category?.name ?? "Uncategorized"}
           </span>
           <span class="shrink-0 font-medium text-ink">{formatCurrency(-parseMoney(t.amount) || 0)}</span>
+          <button
+            class="shrink-0 rounded-xl p-1.5 text-ink-muted transition duration-150 hover:bg-hover hover:text-ink"
+            onclick={() => (editing = t)}
+            aria-label="Edit charge"
+            title="Edit charge"
+          >
+            <Pencil size={14} aria-hidden="true" />
+          </button>
         </li>
       {:else}
         <li class="py-10 text-center text-sm text-ink-muted">
@@ -241,6 +261,20 @@
     <ChevronRight size={20} aria-hidden="true" />
   </button>
 </div>
+
+<Modal open={editing !== null} title="Edit charge" onclose={() => (editing = null)}>
+  {#if editing}
+    {@const target = editing}
+    <TransactionForm
+      transaction={target}
+      categories={data.categories}
+      accounts={data.accounts}
+      creditCards={data.creditCards}
+      oncancel={() => (editing = null)}
+      onsubmit={(input) => saveCharge(target.id, input)}
+    />
+  {/if}
+</Modal>
 
 <Modal open={payOpen} title="Pay invoice" onclose={() => (payOpen = false)}>
   <form class="flex flex-col gap-4" onsubmit={confirmPayInvoice}>

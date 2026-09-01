@@ -13,6 +13,7 @@
   const tx = useTransactions(data.transactions, data.filters);
 
   let showForm = $state(false);
+  let editing = $state<Transaction | null>(null);
   let deleting = $state<Transaction | null>(null);
   let month = $state("");
 
@@ -115,6 +116,7 @@
 <TransactionList
   transactions={tx.items}
   loading={tx.loading}
+  onedit={(t) => (editing = t)}
   onremove={requestDelete}
   ontogglepaid={(t) => tx.togglePaid(t)}
 />
@@ -142,6 +144,23 @@
       showForm = false;
     }}
   />
+</Modal>
+
+<Modal open={editing !== null} title="Edit activity" onclose={() => (editing = null)}>
+  {#if editing}
+    {@const target = editing}
+    <TransactionForm
+      transaction={target}
+      categories={data.categories}
+      accounts={data.accounts}
+      creditCards={data.creditCards}
+      oncancel={() => (editing = null)}
+      onsubmit={async (input) => {
+        await tx.update(target.id, input);
+        editing = null;
+      }}
+    />
+  {/if}
 </Modal>
 
 <Modal open={deleting !== null} title="Delete recurring transaction" onclose={() => (deleting = null)}>

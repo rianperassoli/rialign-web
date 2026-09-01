@@ -6,10 +6,11 @@
   interface Props {
     transactions: Transaction[];
     loading?: boolean;
+    onedit?: (transaction: Transaction) => void;
     onremove?: (transaction: Transaction) => void;
     ontogglepaid?: (transaction: Transaction) => void;
   }
-  let { transactions, loading = false, onremove, ontogglepaid }: Props = $props();
+  let { transactions, loading = false, onedit, onremove, ontogglepaid }: Props = $props();
 </script>
 
 <div class="overflow-hidden rounded-2xl border border-edge bg-surface shadow-xs">
@@ -36,7 +37,7 @@
         </tr>
       {:else}
         {#each transactions as transaction (transaction.id)}
-          <TransactionRow {transaction} {onremove} {ontogglepaid} />
+          <TransactionRow {transaction} {onedit} {onremove} {ontogglepaid} />
         {/each}
       {/if}
     </tbody>

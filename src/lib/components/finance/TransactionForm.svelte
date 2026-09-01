@@ -1,5 +1,13 @@
 <script lang="ts">
-  import type { Account, Category, CreditCard, SeriesOptions, TransactionInput, TransactionKind } from "$api/types";
+  import type {
+    Account,
+    Category,
+    CreditCard,
+    SeriesOptions,
+    Transaction,
+    TransactionInput,
+    TransactionKind
+  } from "$api/types";
   import Button from "$components/ui/Button.svelte";
   import Input from "$components/ui/Input.svelte";
   import Select from "$components/ui/Select.svelte";
@@ -14,16 +22,24 @@
     oncancel?: () => void;
     /** Preset the kind and hide the expense/income toggle (dedicated modals à la Organizze). */
     initialKind?: TransactionKind;
+    /** When set, the form edits this transaction instead of creating a new one. */
+    transaction?: Transaction;
   }
-  let { categories, accounts, creditCards, onsubmit, oncancel, initialKind }: Props = $props();
+  let { categories, accounts, creditCards, onsubmit, oncancel, initialKind, transaction }: Props = $props();
 
-  let description = $state("");
-  let kind = $state<TransactionKind>(initialKind ?? "expense");
-  let amount = $state("");
-  let date = $state(toDateInput());
-  let paid = $state(true);
-  let categoryId = $state<string>("");
-  let source = $state<string>(accounts[0] ? `account:${accounts[0].id}` : "");
+  function initialSource(): string {
+    if (transaction?.credit_card_id) return `card:${transaction.credit_card_id}`;
+    if (transaction?.account_id) return `account:${transaction.account_id}`;
+    return accounts[0] ? `account:${accounts[0].id}` : "";
+  }
+
+  let description = $state(transaction?.description ?? "");
+  let kind = $state<TransactionKind>(transaction?.kind ?? initialKind ?? "expense");
+  let amount = $state<string | number>(transaction?.amount ?? "");
+  let date = $state(transaction?.date ?? toDateInput());
+  let paid = $state(transaction?.paid ?? true);
+  let categoryId = $state<string | number>(transaction?.category?.id ?? "");
+  let source = $state<string>(initialSource());
   let repeat = $state<"" | "installments" | "fixed">("");
   let occurrences = $state(12);
 
@@ -134,26 +150,34 @@
 
   <Select label="Account / Card" bind:value={source} options={sourceOptions} />
 
-  <div class="grid grid-cols-2 gap-3">
-    <Select
-      label="Repeat"
-      bind:value={repeat}
-      options={[
-        { value: "", label: "One-time" },
-        { value: "installments", label: "Installments (split total)" },
-        { value: "fixed", label: "Fixed monthly (same amount)" }
-      ]}
-    />
-    {#if repeat}
-      <Input label="Times" type="number" min="2" max="60" bind:value={occurrences} />
+  {#if !transaction}
+    <div class="grid grid-cols-2 gap-3">
+      <Select
+        label="Repeat"
+        bind:value={repeat}
+        options={[
+          { value: "", label: "One-time" },
+          { value: "installments", label: "Installments (split total)" },
+          { value: "fixed", label: "Fixed monthly (same amount)" }
+        ]}
+      />
+      {#if repeat}
+        <Input label="Times" type="number" min="2" max="60" bind:value={occurrences} />
+      {/if}
+    </div>
+    {#if perInstallment}
+      <p class="-mt-2 text-xs text-ink-muted">
+        {occurrences} monthly installments of {formatCurrency(perInstallment)}
+      </p>
+    {:else if repeat === "fixed"}
+      <p class="-mt-2 text-xs text-ink-muted">Repeats this amount every month; future months start as pending.</p>
     {/if}
-  </div>
-  {#if perInstallment}
-    <p class="-mt-2 text-xs text-ink-muted">
-      {occurrences} monthly installments of {formatCurrency(perInstallment)}
+  {:else if transaction.series_id}
+    <p class="-mt-1 text-xs text-ink-muted">
+      This is part of a {transaction.installment_total
+        ? `${transaction.installment_total}x installment plan`
+        : "monthly series"} — your changes apply to this occurrence only.
     </p>
-  {:else if repeat === "fixed"}
-    <p class="-mt-2 text-xs text-ink-muted">Repeats this amount every month; future months start as pending.</p>
   {/if}
 
   <label class="flex items-center gap-2 text-sm text-ink-secondary">
@@ -166,7 +190,7 @@
       <Button type="button" variant="secondary" onclick={oncancel}>Cancel</Button>
     {/if}
     <Button type="submit" variant={kind === "expense" ? "expense" : "income"} loading={submitting}>
-      Save {kind}
+      {transaction ? "Save changes" : `Save ${kind}`}
     </Button>
   </div>
 </form>

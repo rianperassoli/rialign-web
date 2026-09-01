@@ -70,6 +70,19 @@ export function useTransactions(initial: Collection<Transaction>, initialFilters
     }
   }
 
+  /** Edit a transaction and swap the fresh server row in place. */
+  async function update(id: number, input: Partial<TransactionInput>): Promise<Transaction> {
+    error = null;
+    try {
+      const res = await api.transactions.update(id, input);
+      items = items.map((t) => (t.id === id ? res.data : t));
+      return res.data;
+    } catch (e) {
+      error = errorMessage(e);
+      throw e;
+    }
+  }
+
   async function remove(id: number, scope: DeleteScope = "one"): Promise<void> {
     if (scope !== "one") {
       // Series deletes touch rows beyond the current page: refetch.
@@ -130,6 +143,7 @@ export function useTransactions(initial: Collection<Transaction>, initialFilters
     applyFilters,
     setPage,
     create,
+    update,
     remove,
     togglePaid
   };

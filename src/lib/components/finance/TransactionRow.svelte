@@ -5,10 +5,11 @@
 
   interface Props {
     transaction: Transaction;
+    onedit?: (transaction: Transaction) => void;
     onremove?: (transaction: Transaction) => void;
     ontogglepaid?: (transaction: Transaction) => void;
   }
-  let { transaction, onremove, ontogglepaid }: Props = $props();
+  let { transaction, onedit, onremove, ontogglepaid }: Props = $props();
 
   const isIncome = $derived(transaction.kind === "income");
   const overdue = $derived(!transaction.paid && transaction.date < toDateInput());
@@ -53,10 +54,17 @@
     {isIncome ? "+" : "-"}{formatCurrency(transaction.amount)}
   </td>
   <td class="px-4 py-3 text-right">
-    {#if onremove}
-      <button class="text-xs text-ink-muted hover:text-expense" onclick={() => onremove?.(transaction)}>
-        Delete
-      </button>
-    {/if}
+    <div class="flex items-center justify-end gap-3">
+      {#if onedit}
+        <button class="text-xs text-ink-muted hover:text-ink" onclick={() => onedit?.(transaction)}>
+          Edit
+        </button>
+      {/if}
+      {#if onremove}
+        <button class="text-xs text-ink-muted hover:text-expense" onclick={() => onremove?.(transaction)}>
+          Delete
+        </button>
+      {/if}
+    </div>
   </td>
 </tr>
