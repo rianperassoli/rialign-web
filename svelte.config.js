@@ -4,12 +4,11 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
-  // `state_referenced_locally` fires on our intentional pattern of passing page
-  // `data`/props once into a composable that then owns the state. The `check`
-  // script already ignores it; mirror that here so the dev server and every
-  // other tool stay quiet too.
+  // The only warning we drop. It asks components to stop using rest props so a
+  // custom element could infer them — we ship no custom elements, and the rest
+  // props on Input/Select/Button are what let them forward native attributes.
   compilerOptions: {
-    warningFilter: (warning) => warning.code !== "state_referenced_locally"
+    warningFilter: (warning) => warning.code !== "custom_element_props_identifier"
   },
   kit: {
     adapter: adapter(),

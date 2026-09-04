@@ -1,5 +1,6 @@
 <script lang="ts">
   import Plus from "@lucide/svelte/icons/plus";
+  import { untrack } from "svelte";
   import type { AccountType } from "$api/types";
   import AccountCard from "$components/finance/AccountCard.svelte";
   import Button from "$components/ui/Button.svelte";
@@ -11,14 +12,19 @@
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
-  const accounts = useAccounts(data.accounts);
+  // SSR seed, read once: from here on the composable owns this state and
+  // refreshes it itself, so a later `data` must not clobber it.
+  const accounts = untrack(() => useAccounts(data.accounts));
 
   let showForm = $state(false);
   let name = $state("");
   let accountType = $state<AccountType>("checking");
   let initialBalance = $state("");
 
-  const total = $derived(accounts.items.reduce((sum, a) => sum + Number(a.current_balance), 0));
+  // Same rule the dashboard and the API use: flagged accounts are listed here,
+  // but they do not move the total.
+  const counted = $derived(accounts.items.filter((a) => !a.exclude_from_total));
+  const total = $derived(counted.reduce((sum, a) => sum + Number(a.current_balance), 0));
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -72,7 +78,12 @@
 <div class="mb-6 flex items-center justify-between">
   <div>
     <h1 class="text-2xl font-bold text-ink">Accounts</h1>
-    <p class="text-sm text-ink-muted">{formatCurrency(total)} across {accounts.items.length} accounts</p>
+    <p class="text-sm text-ink-muted">
+      {formatCurrency(total)} across {counted.length} account{counted.length === 1 ? "" : "s"}{accounts.items
+        .length > counted.length
+        ? ` · ${accounts.items.length - counted.length} not counted`
+        : ""}
+    </p>
   </div>
   <div class="flex gap-2">
     <Button variant="secondary" disabled={accounts.items.length < 2} onclick={openTransfer}>Transfer</Button>
@@ -84,15 +95,17 @@
   <p class="mb-4 rounded-xl bg-expense/10 p-2 text-sm text-expense">{accounts.error}</p>
 {/if}
 
-<div class="flex flex-col gap-3">
-  {#each accounts.items as account (account.id)}
-    <AccountCard {account} onremove={(id) => accounts.remove(id)} />
-  {:else}
-    <p class="rounded-2xl border border-dashed border-edge p-10 text-center text-ink-muted">
-      No accounts yet. Create your first one.
-    </p>
-  {/each}
-</div>
+{#if accounts.items.length}
+  <div class="divide-y divide-edge-subtle overflow-hidden rounded-2xl border border-edge bg-surface shadow-xs">
+    {#each accounts.items as account (account.id)}
+      <AccountCard {account} onremove={(id) => accounts.remove(id)} />
+    {/each}
+  </div>
+{:else}
+  <p class="rounded-2xl border border-dashed border-edge p-10 text-center text-ink-muted">
+    No accounts yet. Create your first one.
+  </p>
+{/if}
 
 <Modal open={showForm} title="New account" onclose={() => (showForm = false)}>
   <form class="flex flex-col gap-4" onsubmit={submit}>

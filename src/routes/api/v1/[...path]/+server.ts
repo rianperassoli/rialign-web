@@ -19,11 +19,13 @@ async function proxy(method: string, { params, url, request, locals }: Parameter
   }
   if (locals.token) headers.set("Authorization", `Bearer ${locals.token}`);
 
+  // Read the body as bytes, not text: file uploads are binary and decoding them
+  // as UTF-8 would corrupt the payload. JSON survives this untouched.
   const hasBody = method !== "GET" && method !== "HEAD" && method !== "DELETE";
   const res = await fetch(target, {
     method,
     headers,
-    body: hasBody ? await request.text() : undefined
+    body: hasBody ? await request.arrayBuffer() : undefined
   });
 
   // Stream the body straight through, preserving status and content type.

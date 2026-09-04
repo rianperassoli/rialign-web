@@ -29,7 +29,7 @@
       <div class="mb-5 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-ink">{title}</h2>
         <button
-          class="rounded-xl p-1.5 text-ink-muted transition duration-150 hover:bg-hover hover:text-ink-secondary"
+          class="cursor-pointer rounded-xl p-1.5 text-ink-muted transition duration-150 hover:bg-hover hover:text-ink-secondary"
           onclick={onclose}
         >
           <span class="sr-only">Close</span>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import Plus from "@lucide/svelte/icons/plus";
+  import { untrack } from "svelte";
   import type { Category, TransactionKind } from "$api/types";
   import Button from "$components/ui/Button.svelte";
   import Input from "$components/ui/Input.svelte";
@@ -9,7 +10,9 @@
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
-  const categories = useCategories(data.categories);
+  // SSR seed, read once: from here on the composable owns this state and
+  // refreshes it itself, so a later `data` must not clobber it.
+  const categories = untrack(() => useCategories(data.categories));
 
   let showForm = $state(false);
   let editing = $state<Category | null>(null);

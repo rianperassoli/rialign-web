@@ -2,6 +2,7 @@
   import ArrowLeftRight from "@lucide/svelte/icons/arrow-left-right";
   import Minus from "@lucide/svelte/icons/minus";
   import Plus from "@lucide/svelte/icons/plus";
+  import { untrack } from "svelte";
   import { createApiClient } from "$api/client";
   import type { SeriesOptions, TransactionInput, TransferInput } from "$api/types";
   import AccountCard from "$components/finance/AccountCard.svelte";
@@ -14,7 +15,9 @@
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
-  const dash = useDashboard(data.dashboard, data.month);
+  // SSR seed, read once: from here on the composable owns this state and
+  // refreshes it itself, so a later `data` must not clobber it.
+  const dash = untrack(() => useDashboard(data.dashboard, data.month));
   const api = createApiClient();
 
   const hour = new Date().getHours();
@@ -42,6 +45,11 @@
     await dash.refresh();
   }
 
+  // Accounts flagged out of the total would show a balance the "Overall
+  // balance" above them does not include — two numbers that refuse to add up.
+  // They stay real and stay editable, just on /accounts.
+  const countedAccounts = $derived(dash.data.accounts.filter((a) => !a.exclude_from_total));
+
   const invoicesTotal = $derived(dash.data.credit_cards.reduce((sum, c) => sum + parseMoney(c.open_invoice), 0));
 
   // Top spending categories for the month; the rest folds into "view all".
@@ -52,35 +60,31 @@
 <svelte:head><title>Dashboard · Rialign</title></svelte:head>
 
 <Card class="mb-6">
-  <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+  <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
     <div>
       <p class="text-lg font-semibold text-ink">{greeting}, {data.user.name}!</p>
       <div class="mt-3 flex gap-8 text-sm">
         <div>
-          <p class="text-xs text-ink-muted">Income in {formatMonth(dash.data.period.from)}</p>
+          <p class="text-xs text-ink-muted">Monthly income</p>
           <p class="font-semibold text-income">{formatCurrency(dash.data.totals.income)}</p>
         </div>
         <div>
-          <p class="text-xs text-ink-muted">Expenses in {formatMonth(dash.data.period.from)}</p>
+          <p class="text-xs text-ink-muted">Monthly expenses</p>
           <p class="font-semibold text-expense">{formatCurrency(dash.data.totals.expense)}</p>
-        </div>
-        <div>
-          <p class="text-xs text-ink-muted">Net</p>
-          <p class="font-semibold {Number(dash.data.totals.net) >= 0 ? 'text-income' : 'text-expense'}">
-            {formatCurrency(dash.data.totals.net)}
-          </p>
         </div>
       </div>
     </div>
 
     <div class="flex items-center gap-6">
-      <div>
+      <div class="w-full sm:w-auto">
         <p class="mb-2 text-center text-sm font-semibold text-ink-secondary">Quick access</p>
-        <div class="flex gap-2">
+        <!-- On a phone the three actions split the full width; from sm: they
+             go back to fixed-width tiles so they do not stretch absurdly. -->
+        <div class="grid grid-cols-3 gap-2 sm:flex">
           {#each quickActions as action (action.action)}
             <button
               onclick={() => (quickModal = action.action)}
-              class="flex w-20 flex-col items-center gap-1.5 rounded-2xl border border-edge p-3 text-xs font-medium text-ink-secondary transition duration-150 hover:bg-hover"
+              class="flex w-full flex-col items-center gap-1.5 rounded-2xl border border-edge p-3 text-xs font-medium text-ink-secondary transition duration-150 hover:bg-hover sm:w-20"
             >
               <action.icon size={18} class={action.tint} aria-hidden="true" />
               {action.label}
@@ -101,11 +105,11 @@
     </div>
 
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">My accounts</h2>
-    <div class="flex flex-col gap-3">
-      {#each dash.data.accounts as account (account.id)}
+    <div class="divide-y divide-edge-subtle overflow-hidden rounded-2xl border border-edge bg-surface shadow-xs">
+      {#each countedAccounts as account (account.id)}
         <AccountCard {account} />
       {:else}
-        <p class="text-sm text-ink-muted">No accounts yet.</p>
+        <p class="px-5 py-4 text-sm text-ink-muted">No accounts yet.</p>
       {/each}
     </div>
     <a href="/accounts" class="mt-3 inline-block text-xs font-medium text-brand-600 hover:text-brand-700">
@@ -136,14 +140,18 @@
               View invoice
             </a>
           </div>
-          <div class="mt-3 flex items-center justify-between rounded-xl bg-surface-subtle p-3 text-sm">
+          <div class="mt-3 grid grid-cols-3 gap-3 rounded-xl bg-surface-subtle p-3 text-sm">
             <div>
               <p class="text-xs text-ink-muted">Available limit</p>
               <p class="font-semibold text-ink">{formatCurrency(card.available_limit)}</p>
             </div>
             <div class="text-right">
-              <p class="text-xs text-ink-muted">Open invoice <span class="text-ink-muted">(due day {card.due_day})</span></p>
+              <p class="text-xs text-ink-muted">To pay (day {card.due_day})</p>
               <p class="font-semibold text-expense">{formatCurrency(card.open_invoice)}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-ink-muted">Next invoice</p>
+              <p class="font-semibold text-ink-secondary">{formatCurrency(card.next_invoice)}</p>
             </div>
           </div>
         </div>

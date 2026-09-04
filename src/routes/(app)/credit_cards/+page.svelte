@@ -1,5 +1,6 @@
 <script lang="ts">
   import Plus from "@lucide/svelte/icons/plus";
+  import { untrack } from "svelte";
   import type { CreditCard } from "$api/types";
   import Button from "$components/ui/Button.svelte";
   import Input from "$components/ui/Input.svelte";
@@ -10,7 +11,9 @@
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
-  const cards = useCreditCards(data.creditCards);
+  // SSR seed, read once: from here on the composable owns this state and
+  // refreshes it itself, so a later `data` must not clobber it.
+  const cards = untrack(() => useCreditCards(data.creditCards));
 
   const accountOptions = $derived([
     { value: "", label: "— none —" },
@@ -101,10 +104,17 @@
         </div>
       </div>
       <div class="mt-4 flex items-end justify-between">
-        <div>
-          <p class="text-xs text-ink-muted">Open invoice</p>
-          <p class="text-lg font-semibold text-expense">{formatCurrency(card.open_invoice)}</p>
-          <p class="text-xs text-ink-muted">{formatCurrency(card.available_limit)} available</p>
+        <div class="flex gap-8">
+          <div>
+            <p class="text-xs text-ink-muted">To pay now (closed)</p>
+            <p class="text-lg font-semibold text-expense">{formatCurrency(card.open_invoice)}</p>
+            <p class="text-xs text-ink-muted">{formatCurrency(card.available_limit)} available</p>
+          </div>
+          <div>
+            <p class="text-xs text-ink-muted">Next invoice (open)</p>
+            <p class="text-lg font-semibold text-ink-secondary">{formatCurrency(card.next_invoice)}</p>
+            <p class="text-xs text-ink-muted">closes day {card.closing_day}</p>
+          </div>
         </div>
         <a
           href="/credit_cards/{card.id}"

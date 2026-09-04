@@ -1,15 +1,12 @@
 <script lang="ts">
-  import LogOut from "@lucide/svelte/icons/log-out";
   import { page } from "$app/state";
-  import ThemeToggle from "$components/layout/ThemeToggle.svelte";
+  import UserMenu from "$components/layout/UserMenu.svelte";
 
+  // Day-to-day navigation only; setup lives in the Manage menu.
   const links = [
     { href: "/dashboard", label: "Overview" },
     { href: "/transactions", label: "Activity" },
-    { href: "/reports", label: "Insights" },
-    { href: "/accounts", label: "Accounts" },
-    { href: "/credit_cards", label: "Cards" },
-    { href: "/categories", label: "Categories" }
+    { href: "/reports", label: "Insights" }
   ];
 </script>
 
@@ -35,16 +32,6 @@
       </ul>
     </div>
 
-    <div class="flex items-center gap-3">
-      <ThemeToggle />
-      <form method="POST" action="/logout">
-        <button
-          class="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-ink-secondary transition duration-150 hover:bg-hover"
-        >
-          <LogOut size={15} aria-hidden="true" />
-          Log out
-        </button>
-      </form>
-    </div>
+    <UserMenu />
   </nav>
 </header>

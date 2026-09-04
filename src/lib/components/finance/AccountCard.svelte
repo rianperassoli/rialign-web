@@ -17,15 +17,17 @@
   };
 </script>
 
-<div class="flex items-center justify-between rounded-2xl border border-edge bg-surface p-5 shadow-xs">
-  <div>
-    <p class="font-medium text-ink">{account.name}</p>
-    <p class="text-xs text-ink-muted">{typeLabel[account.account_type] ?? account.account_type}</p>
+<div class="flex items-center gap-3 px-5 py-4">
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-sm font-medium text-ink">{account.name}</p>
+    <p class="text-xs text-ink-muted">
+      {typeLabel[account.account_type] ?? account.account_type}{account.exclude_from_total
+        ? " · not counted towards the total"
+        : ""}
+    </p>
   </div>
-  <div class="flex items-center gap-4">
-    <p class="text-lg font-semibold text-ink">{formatCurrency(account.current_balance)}</p>
-    {#if onremove}
-      <Button variant="ghost" size="sm" onclick={() => onremove?.(account.id)}>Archive</Button>
-    {/if}
-  </div>
+  <p class="shrink-0 text-sm font-semibold tabular-nums text-ink">{formatCurrency(account.current_balance)}</p>
+  {#if onremove}
+    <Button variant="ghost" size="sm" onclick={() => onremove?.(account.id)}>Archive</Button>
+  {/if}
 </div>

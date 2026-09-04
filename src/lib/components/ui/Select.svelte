@@ -13,7 +13,9 @@
   }
 
   let { label, options, value = $bindable(""), placeholder, id, ...rest }: Props = $props();
-  const selectId = id ?? `sel-${Math.random().toString(36).slice(2, 9)}`;
+  // Generated once per instance; the caller's id wins whenever it is given.
+  const fallbackId = `sel-${Math.random().toString(36).slice(2, 9)}`;
+  const selectId = $derived(id ?? fallbackId);
 </script>
 
 <div class="flex flex-col gap-1">
@@ -23,7 +25,7 @@
   <select
     id={selectId}
     bind:value
-    class="rounded-xl border-edge text-sm shadow-xs focus:border-brand-500 focus:ring-brand-500"
+    class="cursor-pointer rounded-xl border-edge text-sm shadow-xs focus:border-brand-500 focus:ring-brand-500"
     {...rest}
   >
     {#if placeholder}

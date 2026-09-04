@@ -8,7 +8,9 @@
   }
 
   let { label, error = null, value = $bindable(""), id, ...rest }: Props = $props();
-  const inputId = id ?? `in-${Math.random().toString(36).slice(2, 9)}`;
+  // Generated once per instance; the caller's id wins whenever it is given.
+  const fallbackId = `in-${Math.random().toString(36).slice(2, 9)}`;
+  const inputId = $derived(id ?? fallbackId);
 </script>
 
 <div class="flex flex-col gap-1">

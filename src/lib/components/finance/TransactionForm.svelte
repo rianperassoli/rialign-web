@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import type {
     Account,
     Category,
@@ -34,20 +35,35 @@
     return accounts[0] ? `account:${accounts[0].id}` : "";
   }
 
-  let description = $state(transaction?.description ?? "");
-  let kind = $state<TransactionKind>(transaction?.kind ?? initialKind ?? "expense");
-  let amount = $state<string | number>(transaction?.amount ?? "");
-  let date = $state(transaction?.date ?? toDateInput());
-  let paid = $state(transaction?.paid ?? true);
-  let categoryId = $state<string | number>(transaction?.category?.id ?? "");
-  let source = $state<string>(initialSource());
+  // The modal mounts a fresh form on every open, so the props are read exactly
+  // once, to seed fields the user then owns. `untrack` says that deliberately:
+  // a later change to `transaction` must NOT overwrite what is being typed.
+  const seed = untrack(() => ({
+    description: transaction?.description ?? "",
+    kind: (transaction?.kind ?? initialKind ?? "expense") as TransactionKind,
+    amount: (transaction?.amount ?? "") as string | number,
+    date: transaction?.date ?? toDateInput(),
+    paid: transaction?.paid ?? true,
+    categoryId: (transaction?.category?.id ?? "") as string | number,
+    source: initialSource(),
+    // Only a credit card leaves the question open: money moving through an
+    // account is settled the moment it happens, so the toggle is hidden there
+    // and paid is forced true. On a card the charge waits for the invoice, so
+    // it starts off — until the user flips it themselves (editing starts
+    // pinned to what was saved).
+    paidPinned: Boolean(transaction)
+  }));
+
+  let description = $state(seed.description);
+  let kind = $state<TransactionKind>(seed.kind);
+  let amount = $state<string | number>(seed.amount);
+  let date = $state(seed.date);
+  let paid = $state(seed.paid);
+  let categoryId = $state<string | number>(seed.categoryId);
+  let source = $state<string>(seed.source);
   let repeat = $state<"" | "installments" | "fixed">("");
   let occurrences = $state(12);
-  // Only a credit card leaves the question open: money moving through an account
-  // is settled the moment it happens, so the toggle is hidden there and paid is
-  // forced true. On a card the charge waits for the invoice, so it starts off —
-  // until the user flips it themselves (editing starts pinned to what was saved).
-  let paidPinned = $state(Boolean(transaction));
+  let paidPinned = $state(seed.paidPinned);
 
   let submitting = $state(false);
   let errors = $state<string[]>([]);

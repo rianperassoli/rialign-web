@@ -22,6 +22,8 @@ import type {
   CreditCardInvoice,
   Dashboard,
   DeleteScope,
+  Import,
+  ImportSettings,
   PayInvoiceInput,
   Report,
   Resource,
@@ -53,6 +55,8 @@ type Query = Record<string, string | number | boolean | undefined | null>;
 interface RequestOptions {
   query?: Query;
   body?: unknown;
+  /** Sent as-is, letting the browser set the multipart boundary. */
+  formData?: FormData;
   /** Retry count for idempotent (GET) requests on network/5xx errors. */
   retries?: number;
 }
@@ -71,7 +75,7 @@ function buildQuery(query?: Query): string {
 
 export function createApiClient(fetchFn: Fetch = fetch) {
   async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
-    const { query, body, retries = method === "GET" ? 2 : 0 } = options;
+    const { query, body, formData, retries = method === "GET" ? 2 : 0 } = options;
     const url = `${BASE}${path}${buildQuery(query)}`;
 
     let attempt = 0;
@@ -80,8 +84,9 @@ export function createApiClient(fetchFn: Fetch = fetch) {
       try {
         const res = await fetchFn(url, {
           method,
+          // No Content-Type for FormData: fetch has to add its own boundary.
           headers: body ? { "Content-Type": "application/json" } : {},
-          body: body ? JSON.stringify(body) : undefined
+          body: formData ?? (body ? JSON.stringify(body) : undefined)
         });
 
         if (res.status === 204) return undefined as T;
@@ -167,6 +172,18 @@ export function createApiClient(fetchFn: Fetch = fetch) {
         request<Resource<Transaction>>("PATCH", `/transactions/${id}`, { body: { transaction } }),
       remove: (id: number, scope: DeleteScope = "one") =>
         request<void>("DELETE", `/transactions/${id}`, { query: { scope: scope === "one" ? undefined : scope } })
+    },
+
+    imports: {
+      list: () => request<Collection<Import>>("GET", "/imports"),
+      get: (id: number) => request<Resource<Import>>("GET", `/imports/${id}`),
+      create: (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return request<Resource<Import>>("POST", "/imports", { formData });
+      },
+      confirm: (id: number, settings: ImportSettings) =>
+        request<Resource<Import>>("POST", `/imports/${id}/confirm`, { body: { settings } })
     },
 
     dashboard: {

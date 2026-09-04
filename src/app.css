@@ -28,6 +28,19 @@
   --color-info: #0ea5e9; /* sky-500 — informational only, never brand */
 
   --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /*
+   * Loading. A ring that turns, but calmly: one lap every 1.6s, roughly a
+   * quarter the speed of a default spinner, so it reads as "working" rather
+   * than "hurrying".
+   */
+  --animate-spin-slow: spin-slow 1.6s linear infinite;
+
+  @keyframes spin-slow {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 
 /* Theme-aware neutrals: stone in light mode, zinc in dark mode. */
@@ -128,5 +141,16 @@
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Exception: the loading ring is the only signal that work is in flight, so
+ * freezing it leaves a meaningless static circle. Under reduced motion it
+ * keeps turning, at roughly half speed.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .spinner-ring {
+    animation: spin-slow 3s linear infinite !important;
   }
 }

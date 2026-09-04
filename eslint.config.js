@@ -19,6 +19,20 @@ export default ts.config(
     files: ["**/*.svelte"],
     languageOptions: {
       parserOptions: { parser: ts.parser }
+    },
+    rules: {
+      // Compiler warnings have one owner: `npm run check` (and the dev server),
+      // which read the `warningFilter` in svelte.config.js. ESLint cannot see
+      // that filter, so leaving this on reports warnings the project has
+      // already ruled on.
+      "svelte/valid-compile": "off"
+    }
+  },
+  {
+    rules: {
+      // `_` is the conventional name for a binding that exists only to reach
+      // the next one, e.g. the index in `{#each Array(n) as _, i}`.
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }]
     }
   },
   {

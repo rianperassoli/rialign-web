@@ -26,6 +26,7 @@ export interface Account {
   account_type: AccountType;
   initial_balance: Money;
   current_balance: Money;
+  exclude_from_total: boolean;
   archived: boolean;
   created_at: ISODateTime;
 }
@@ -36,6 +37,7 @@ export interface CreditCard {
   credit_limit: Money;
   closing_day: number;
   due_day: number;
+  next_invoice: Money;
   payment_account_id: number | null;
   open_invoice: Money;
   available_limit: Money;
@@ -215,3 +217,41 @@ export interface SeriesOptions {
 
 /** How much of a series a DELETE removes. */
 export type DeleteScope = "one" | "future" | "series";
+
+/** Status of a background Organizze import. */
+export type ImportStatus = "pending" | "analyzing" | "awaiting_input" | "importing" | "completed" | "failed";
+
+/** What the first pass found in the file, before anything is written. */
+export interface ImportPreview {
+  accounts?: { name: string; rows: number }[];
+  credit_cards?: { name: string; rows: number; closing_day: number; invoice_months: string[] }[];
+}
+
+/** The answers the export cannot give, keyed by the name in the file. */
+export interface ImportSettings {
+  open_from?: string;
+  accounts?: Record<string, { exclude_from_total?: boolean }>;
+  credit_cards?: Record<string, { closing_day?: number; due_day?: number; credit_limit?: string }>;
+}
+
+/** What the import wrote, keyed as the API reports it. */
+export interface ImportReport {
+  imported?: number;
+  accounts?: number;
+  credit_cards?: number;
+  categories?: number;
+  replaced?: number;
+  skipped_zero?: number;
+  skipped_card_credit?: number;
+  skipped_no_date?: number;
+}
+
+export interface Import {
+  id: number;
+  status: ImportStatus;
+  filename: string;
+  preview: ImportPreview;
+  report: ImportReport;
+  error_message: string | null;
+  created_at: string;
+}

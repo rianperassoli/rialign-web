@@ -1,5 +1,6 @@
 <script lang="ts">
   import Plus from "@lucide/svelte/icons/plus";
+  import { untrack } from "svelte";
   import type { Transaction, TransactionKind } from "$api/types";
   import TransactionForm from "$components/finance/TransactionForm.svelte";
   import TransactionList from "$components/finance/TransactionList.svelte";
@@ -10,7 +11,9 @@
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
-  const tx = useTransactions(data.transactions, data.filters);
+  // SSR seed, read once: from here on the composable owns this state and
+  // refreshes it itself, so a later `data` must not clobber it.
+  const tx = untrack(() => useTransactions(data.transactions, data.filters));
 
   let showForm = $state(false);
   let editing = $state<Transaction | null>(null);
@@ -42,9 +45,17 @@
     deleting = null;
     await tx.remove(id, scope);
   }
-  let search = $state(data.filters.search ?? "");
-  let kind = $state<string>(data.filters.kind ?? "");
-  let paid = $state<string>(data.filters.paid === undefined ? "" : String(data.filters.paid));
+  // Same seed rule as above: the filter fields are user-owned once mounted,
+  // and filtering refreshes through `tx`, never through a new `data`.
+  const filterSeed = untrack(() => ({
+    search: data.filters.search ?? "",
+    kind: data.filters.kind ?? "",
+    paid: data.filters.paid === undefined ? "" : String(data.filters.paid)
+  }));
+
+  let search = $state(filterSeed.search);
+  let kind = $state<string>(filterSeed.kind);
+  let paid = $state<string>(filterSeed.paid);
 
   let searchTimer: ReturnType<typeof setTimeout>;
   function onSearchInput() {

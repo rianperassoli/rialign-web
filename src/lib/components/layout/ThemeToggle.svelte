@@ -29,7 +29,7 @@
 <div class="flex items-center gap-0.5 rounded-xl bg-surface-subtle p-0.5" role="group" aria-label="Theme">
   <button
     onclick={() => select("light")}
-    class="rounded-[10px] p-1.5 transition duration-150 {theme === 'light'
+    class="cursor-pointer rounded-[10px] p-1.5 transition duration-150 {theme === 'light'
       ? 'bg-surface text-ink shadow-xs'
       : 'text-ink-muted hover:text-ink-secondary'}"
     title="Light theme"
@@ -40,7 +40,7 @@
   </button>
   <button
     onclick={() => select("dark")}
-    class="rounded-[10px] p-1.5 transition duration-150 {theme === 'dark'
+    class="cursor-pointer rounded-[10px] p-1.5 transition duration-150 {theme === 'dark'
       ? 'bg-surface text-ink shadow-xs'
       : 'text-ink-muted hover:text-ink-secondary'}"
     title="Dark theme"
@@ -51,7 +51,7 @@
   </button>
   <button
     onclick={() => select("system")}
-    class="rounded-[10px] p-1.5 transition duration-150 {theme === 'system'
+    class="cursor-pointer rounded-[10px] p-1.5 transition duration-150 {theme === 'system'
       ? 'bg-surface text-ink shadow-xs'
       : 'text-ink-muted hover:text-ink-secondary'}"
     title="System theme"
