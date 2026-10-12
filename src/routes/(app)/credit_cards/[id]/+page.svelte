@@ -2,12 +2,12 @@
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
-  import Pencil from "@lucide/svelte/icons/pencil";
   import Plus from "@lucide/svelte/icons/plus";
   import Search from "@lucide/svelte/icons/search";
   import { goto, invalidateAll } from "$app/navigation";
   import { ApiError, createApiClient } from "$api/client";
   import type { Transaction, TransactionInput } from "$api/types";
+  import ChargeMenu from "$components/finance/ChargeMenu.svelte";
   import TransactionForm from "$components/finance/TransactionForm.svelte";
   import Badge from "$components/ui/Badge.svelte";
   import Button from "$components/ui/Button.svelte";
@@ -18,6 +18,7 @@
     currentMonthParam,
     formatCurrency,
     formatDate,
+    formatShortDate,
     formatMonth,
     parseMoney,
     toDateInput
@@ -37,13 +38,17 @@
     closed: m.invoice_status_closed(),
     paid: m.invoice_status_paid()
   } as const;
-  const isCurrent = $derived(invoice.month === currentMonthParam());
+  const isCurrent = $derived(invoice.month === card.current_invoice_month);
 
-  function shiftMonth(delta: number) {
+  // The "YYYY-MM" invoice `delta` months away from the one on screen.
+  function monthAway(delta: number) {
     const year = Number(invoice.month.slice(0, 4));
     const month = Number(invoice.month.slice(5, 7));
-    const target = currentMonthParam(new Date(year, month - 1 + delta, 1));
-    void goto(`/credit_cards/${card.id}?month=${target}`);
+    return currentMonthParam(new Date(year, month - 1 + delta, 1));
+  }
+
+  function shiftMonth(delta: number) {
+    void goto(`/credit_cards/${card.id}?month=${monthAway(delta)}`);
   }
 
   /* ---- Charges filter ---- */
@@ -63,6 +68,23 @@
     await api.transactions.update(id, input);
     editing = null;
     await invalidateAll();
+  }
+
+  /* ---- Move a charge to the invoice before/after ---- */
+  let moving = $state<number | null>(null);
+  let moveError = $state("");
+
+  async function moveCharge(id: number, delta: -1 | 1) {
+    moving = id;
+    moveError = "";
+    try {
+      await api.transactions.update(id, { invoice_month: monthAway(delta) });
+      await invalidateAll();
+    } catch (err) {
+      moveError = err instanceof ApiError ? err.errors.join(", ") : m.invoice_move_error();
+    } finally {
+      moving = null;
+    }
   }
 
   /* ---- Pay invoice modal ---- */
@@ -227,10 +249,14 @@
       </span>
     </div>
 
+    {#if moveError}
+      <p class="mt-3 rounded-xl bg-expense/10 p-3 text-sm text-expense">{moveError}</p>
+    {/if}
+
     <ul class="mt-2 divide-y divide-edge-subtle">
       {#each visibleTransactions as t (t.id)}
         <li class="flex items-center gap-4 py-3.5 text-sm">
-          <span class="w-12 shrink-0 text-xs text-ink-muted">{formatDate(t.date)}</span>
+          <span class="w-12 shrink-0 text-xs text-ink-muted">{formatShortDate(t.date)}</span>
           <span class="min-w-0 flex-1 truncate font-medium text-ink">
             {t.description}
             {#if t.installment_number}
@@ -246,14 +272,13 @@
             {t.category?.name ?? m.invoice_uncategorized()}
           </span>
           <span class="shrink-0 font-medium text-ink">{formatCurrency(-parseMoney(t.amount) || 0)}</span>
-          <button
-            class="shrink-0 rounded-xl p-1.5 text-ink-muted transition duration-150 hover:bg-hover hover:text-ink"
-            onclick={() => (editing = t)}
-            aria-label={m.invoice_edit_charge()}
-            title={m.invoice_edit_charge()}
-          >
-            <Pencil size={14} aria-hidden="true" />
-          </button>
+          <ChargeMenu
+            onedit={() => (editing = t)}
+            onmove={(delta) => moveCharge(t.id, delta)}
+            previousPaid={invoice.previous_paid}
+            nextPaid={invoice.next_paid}
+            disabled={moving === t.id}
+          />
         </li>
       {:else}
         <li class="py-10 text-center text-sm text-ink-muted">

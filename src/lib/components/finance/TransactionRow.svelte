@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Transaction } from "$api/types";
   import Badge from "$components/ui/Badge.svelte";
-  import { formatCurrency, formatDate, toDateInput } from "$utils/formatting";
+  import { formatCurrency, formatShortDate, toDateInput } from "$utils/formatting";
   import { m } from "$lib/paraglide/messages";
 
   interface Props {
@@ -34,7 +34,7 @@
     </p>
   </td>
   <td class="px-4 py-3 text-sm {overdue ? 'font-medium text-expense' : 'text-ink-muted'}">
-    {formatDate(transaction.date)}
+    {formatShortDate(transaction.date)}
   </td>
   <td class="px-4 py-3">
     {#if ontogglepaid}

@@ -54,6 +54,21 @@ export function formatDate(value: string | Date | null | undefined, locale = act
   return new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(date);
 }
 
+/**
+ * Day and month only, for transaction lists where the year is implied: "07/10"
+ * in pt-BR. English gets "Oct 7" instead of the numeric US "10/07", which reads
+ * as July 10 to anyone used to day-first dates.
+ */
+export function formatShortDate(value: string | Date | null | undefined, locale = activeLocale()): string {
+  if (!value) return "—";
+  const date = toLocalDate(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  const options: Intl.DateTimeFormatOptions = locale.startsWith("en")
+    ? { month: "short", day: "numeric" }
+    : { day: "2-digit", month: "2-digit" };
+  return new Intl.DateTimeFormat(locale, options).format(date);
+}
+
 export function formatMonth(value: string | Date, locale = activeLocale()): string {
   return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(toLocalDate(value));
 }

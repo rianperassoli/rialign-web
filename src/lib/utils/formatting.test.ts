@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { currentMonthParam, formatCurrency, formatDate, maskNumber, parseMoney, toDateInput } from "./formatting";
+import {
+  currentMonthParam,
+  formatCurrency,
+  formatDate,
+  formatShortDate,
+  maskNumber,
+  parseMoney,
+  toDateInput
+} from "./formatting";
 
 // Intl separates the symbol with a non-breaking space; compare on a plain one.
 const plain = (value: string) => value.replace(/\u00a0/g, " ");
@@ -42,6 +50,19 @@ describe("formatDate", () => {
   it("returns a dash for empty/invalid input", () => {
     expect(formatDate(null)).toBe("—");
     expect(formatDate("nope")).toBe("—");
+  });
+});
+
+describe("formatShortDate", () => {
+  it("writes day/month in pt-BR", () => {
+    expect(formatShortDate("2026-10-07", "pt-BR")).toBe("07/10");
+  });
+  it("spells the month out in English instead of the ambiguous 10/07", () => {
+    expect(formatShortDate("2026-10-07", "en-US")).toBe("Oct 7");
+  });
+  it("returns a dash for empty/invalid input", () => {
+    expect(formatShortDate(undefined)).toBe("—");
+    expect(formatShortDate("nope")).toBe("—");
   });
 });
 

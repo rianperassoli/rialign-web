@@ -37,6 +37,8 @@ export interface CreditCard {
   credit_limit: Money;
   closing_day: number;
   due_day: number;
+  /** The invoice accumulating charges today ("YYYY-MM", named after its due month). */
+  current_invoice_month: string;
   next_invoice: Money;
   payment_account_id: number | null;
   open_invoice: Money;
@@ -65,6 +67,8 @@ export interface Transaction {
   category: Pick<Category, "id" | "name" | "kind" | "color"> | null;
   account_id: number | null;
   credit_card_id: number | null;
+  /** The invoice a card charge sits on ("YYYY-MM", its due month); null off a card. */
+  invoice_month: string | null;
   /** Present on the two legs of a transfer and on invoice-settlement legs. */
   transfer_id: string | null;
   /** Shared by every occurrence of an installment or fixed (monthly) series. */
@@ -101,6 +105,9 @@ export interface CreditCardInvoice {
   total: Money;
   pending: Money;
   status: "open" | "closed" | "paid";
+  /** Whether the invoices either side are paid — a charge cannot be moved onto one. */
+  previous_paid: boolean;
+  next_paid: boolean;
   transactions: Transaction[];
 }
 
@@ -167,6 +174,8 @@ export interface TransactionInput {
   category_id: number;
   account_id?: number | null;
   credit_card_id?: number | null;
+  /** Push a card charge to another invoice ("YYYY-MM"); omitted, it follows the date. */
+  invoice_month?: string;
 }
 
 export interface AccountInput {

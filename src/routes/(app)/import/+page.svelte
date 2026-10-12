@@ -36,7 +36,9 @@
   const hasData = $derived(data.accounts.length > 0);
   const busy = $derived(current?.status === "pending" || current?.status === "analyzing");
   const writing = $derived(current?.status === "importing");
-  const preview = $derived(current?.status === "awaiting_input" ? current.preview : null);
+  // The step-two form stays on screen (frozen) while the confirmed import is
+  // written, so the page never goes blank between confirming and the result.
+  const preview = $derived(current?.status === "awaiting_input" || writing ? (current?.preview ?? null) : null);
 
   // Every invoice named in the file, newest first — the answer to "which one
   // have you not paid yet?" is one of these.
@@ -209,67 +211,72 @@
         {m.import_step2_intro()}
       </p>
 
-      {#if invoiceMonths.length}
-        <div class="mt-5">
-          <Select
-            label={m.import_open_from_label()}
-            bind:value={openFrom}
-            options={invoiceMonths.map((month) => ({ value: month, label: formatMonth(month) }))}
-          />
-          <p class="mt-1 text-xs text-ink-muted">
-            {m.import_open_from_hint()}
-          </p>
-        </div>
-      {/if}
-
-      {#each preview.credit_cards ?? [] as card (card.name)}
-        {@const form = cardSettings[card.name]}
-        <div class="mt-5 rounded-xl border border-edge p-3">
-          <p class="text-sm font-medium text-ink">{card.name}</p>
-          <p class="text-xs text-ink-muted">
-            {m.import_card_meta({ rows: card.rows.toLocaleString(), day: card.closing_day })}
-          </p>
-          {#if form}
-            <div class="mt-3 grid gap-3 sm:grid-cols-3">
-              <Input label={m.field_closing_day()} type="number" min="1" max="31" bind:value={form.closing_day} />
-              <Input label={m.field_due_day()} type="number" min="1" max="31" placeholder="10" bind:value={form.due_day} />
-              <Input
-                label={m.field_credit_limit()}
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                bind:value={form.credit_limit}
-              />
-            </div>
-            <p class="mt-2 text-xs text-ink-muted">
-              {m.import_card_hint()}
+      <fieldset disabled={writing} class="contents">
+        {#if invoiceMonths.length}
+          <div class="mt-5">
+            <Select
+              label={m.import_open_from_label()}
+              bind:value={openFrom}
+              options={invoiceMonths.map((month) => ({ value: month, label: formatMonth(month) }))}
+            />
+            <p class="mt-1 text-xs text-ink-muted">
+              {m.import_open_from_hint()}
             </p>
-          {/if}
+          </div>
+        {/if}
+  
+        {#each preview.credit_cards ?? [] as card (card.name)}
+          {@const form = cardSettings[card.name]}
+          <div class="mt-5 rounded-xl border border-edge p-3">
+            <p class="text-sm font-medium text-ink">{card.name}</p>
+            <p class="text-xs text-ink-muted">
+              {m.import_card_meta({ rows: card.rows.toLocaleString(), day: card.closing_day })}
+            </p>
+            {#if form}
+              <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                <Input label={m.field_closing_day()} type="number" min="1" max="31" bind:value={form.closing_day} />
+                <Input label={m.field_due_day()} type="number" min="1" max="31" placeholder="10" bind:value={form.due_day} />
+                <Input
+                  label={m.field_credit_limit()}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  bind:value={form.credit_limit}
+                />
+              </div>
+              <p class="mt-2 text-xs text-ink-muted">
+                {m.import_card_hint()}
+              </p>
+            {/if}
+          </div>
+        {/each}
+  
+        <div class="mt-5">
+          <p class="text-sm font-medium text-ink">{m.import_accounts_title()}</p>
+          <p class="text-xs text-ink-muted">{m.import_accounts_hint()}</p>
+          <div class="mt-2 grid gap-1 sm:grid-cols-2">
+            {#each preview.accounts ?? [] as account (account.name)}
+              <label
+                class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-secondary hover:bg-hover"
+              >
+                <input type="checkbox" bind:checked={counted[account.name]} class="cursor-pointer rounded border-edge" />
+                <span class="flex-1 truncate">{account.name}</span>
+                <span class="text-xs text-ink-muted">{account.rows.toLocaleString()}</span>
+              </label>
+            {/each}
+          </div>
         </div>
-      {/each}
-
-      <div class="mt-5">
-        <p class="text-sm font-medium text-ink">{m.import_accounts_title()}</p>
-        <p class="text-xs text-ink-muted">{m.import_accounts_hint()}</p>
-        <div class="mt-2 grid gap-1 sm:grid-cols-2">
-          {#each preview.accounts ?? [] as account (account.name)}
-            <label
-              class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-secondary hover:bg-hover"
-            >
-              <input type="checkbox" bind:checked={counted[account.name]} class="cursor-pointer rounded border-edge" />
-              <span class="flex-1 truncate">{account.name}</span>
-              <span class="text-xs text-ink-muted">{account.rows.toLocaleString()}</span>
-            </label>
-          {/each}
-        </div>
-      </div>
+      </fieldset>
 
       {#if error}
         <p class="mt-4 rounded-xl bg-expense/10 p-3 text-sm text-expense">{error}</p>
       {/if}
 
-      <div class="mt-5 flex justify-end">
+      <div class="mt-5 flex items-center justify-end gap-3">
+        {#if writing}
+          <p class="text-xs text-ink-muted" role="status">{m.import_writing_hint()}</p>
+        {/if}
         <Button onclick={confirmImport} loading={writing} disabled={writing}>
           {writing ? m.import_writing() : m.import_submit()}
         </Button>
