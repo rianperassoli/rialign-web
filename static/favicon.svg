@@ -1,12 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#15803d" />
-  <text
-    x="32"
-    y="45"
-    text-anchor="middle"
-    font-family="Inter, ui-sans-serif, system-ui, sans-serif"
-    font-size="38"
-    font-weight="600"
-    fill="#ffffff"
-  >R</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#15803d">
+  <rect x="0" y="0" width="44" height="44" rx="8" />
+  <rect x="0" y="56" width="44" height="44" rx="8" />
+  <path d="M64 0H78A22 22 0 0 1 78 44H64A8 8 0 0 1 56 36V8A8 8 0 0 1 64 0Z" />
+  <path d="M62 56H66A34 44 0 0 1 100 100H62A6 6 0 0 1 56 94V62A6 6 0 0 1 62 56Z" />
 </svg>

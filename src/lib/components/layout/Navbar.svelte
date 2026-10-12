@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
+  import Logo from "$components/brand/Logo.svelte";
   import UserMenu from "$components/layout/UserMenu.svelte";
   import { m } from "$lib/paraglide/messages";
 
@@ -13,8 +14,12 @@
 
 <header class="border-b border-edge bg-surface">
   <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-    <div class="flex items-center gap-8">
-      <a href="/dashboard" class="text-lg font-semibold tracking-tight text-brand-700">Rialign</a>
+    <div class="flex items-center gap-4 sm:gap-8">
+      <!-- Symbol only on phones, so the links still fit on one line. -->
+      <a href="/dashboard" aria-label="Rialign" class="rounded-lg">
+        <span class="sm:hidden"><Logo variant="symbol" size={26} /></span>
+        <span class="hidden sm:inline"><Logo size={26} /></span>
+      </a>
       <ul class="flex gap-1">
         {#each links as link (link.href)}
           {@const active = page.url.pathname.startsWith(link.href)}

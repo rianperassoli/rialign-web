@@ -1,6 +1,7 @@
 <script lang="ts">
   import CreditCard from "@lucide/svelte/icons/credit-card";
   import Import from "@lucide/svelte/icons/upload";
+  import Info from "@lucide/svelte/icons/info";
   import LogOut from "@lucide/svelte/icons/log-out";
   import Settings from "@lucide/svelte/icons/settings";
   import Tag from "@lucide/svelte/icons/tag";
@@ -77,6 +78,18 @@
       </div>
 
       <div class="my-1.5 border-t border-edge"></div>
+
+      <a
+        href="/about"
+        role="menuitem"
+        class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition duration-150 {page.url.pathname ===
+        '/about'
+          ? 'bg-brand-soft text-brand-soft-ink'
+          : 'text-ink-secondary hover:bg-hover'}"
+      >
+        <Info size={15} aria-hidden="true" />
+        {m.menu_about()}
+      </a>
 
       <form method="POST" action="/logout">
         <button

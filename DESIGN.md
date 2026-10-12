@@ -28,6 +28,15 @@ The navbar theme switcher (`ThemeToggle.svelte`) sets `data-theme="light|dark"`
 on `<html>` and persists it in `localStorage`; "System" removes the attribute.
 An inline script in `app.html` applies the saved value **before first paint**.
 
+## Logo
+
+Source of truth: `../identidade visual-base.png` (brand sheet). The mark is four
+pieces aligned into an "R"; it lives in `src/lib/components/brand/Logo.svelte`
+(`symbol` / `horizontal` / `vertical`, optional tagline) and `static/favicon.svg`.
+The mark is Green 700 on light and dark backgrounds, white on a green one
+(`class="text-white"`). Wordmark is Inter semibold in `ink`; the tagline
+("Your finances, finally aligned.", `brand_tagline`) is `brand-ink`.
+
 ## Brand (green — Tailwind `green` scale as `brand-*`)
 
 | Role                                | Token              | Hex                              |
@@ -39,23 +48,24 @@ An inline script in `app.html` applies the saved value **before first paint**.
 | Soft background (chips, active nav) | `brand-soft`       | green-100 light / green-900 dark |
 | Soft background hover               | `brand-soft-hover` | green-200 light / green-800 dark |
 | Text on soft background             | `brand-soft-ink`   | green-800 light / green-200 dark |
+| Green text on plain backgrounds     | `brand-ink`        | green-700 light / green-400 dark |
 
 Use `brand-soft` + `brand-soft-ink` together — never hardcode `green-100`
 text-on-chip colors, they don't survive dark mode.
 
 ## Neutrals (semantic — stone in light, zinc in dark)
 
-| Token            | Utility examples           | Light (stone)       | Dark (zinc)        | Use for                                         |
-| ---------------- | -------------------------- | ------------------- | ------------------ | ----------------------------------------------- |
-| `app`            | `bg-app`                   | stone-50 `#fafaf9`  | zinc-950 `#09090b` | Page background                                 |
-| `surface`        | `bg-surface`               | white               | zinc-900 `#18181b` | Cards, modals, navbar, inputs                   |
-| `surface-subtle` | `bg-surface-subtle`        | stone-100 `#f5f5f4` | zinc-800 `#27272a` | Inner boxes, pills, tracks, elevated dark cards |
-| `edge`           | `border-edge`, `ring-edge` | stone-200 `#e7e5e4` | zinc-700 `#3f3f46` | Borders                                         |
-| `edge-subtle`    | `divide-edge-subtle`       | stone-100           | zinc-800           | Row dividers                                    |
-| `ink`            | `text-ink`, `fill-ink`     | stone-900 `#1c1917` | zinc-50 `#fafafa`  | Primary text                                    |
-| `ink-secondary`  | `text-ink-secondary`       | stone-600 `#57534e` | zinc-400 `#a1a1aa` | Secondary text, labels                          |
-| `ink-muted`      | `text-ink-muted`           | stone-400 `#a8a29e` | zinc-500 `#71717a` | Muted text, placeholders                        |
-| `hover`          | `hover:bg-hover`           | stone-100           | zinc-800           | Hover surfaces                                  |
+| Token            | Utility examples           | Light (stone)       | Dark (zinc)         | Use for                                         |
+| ---------------- | -------------------------- | ------------------- | ------------------- | ----------------------------------------------- |
+| `app`            | `bg-app`                   | Stone 50 `#fafaf8`  | Stone 900 `#0c0c0c` | Page background                                 |
+| `surface`        | `bg-surface`               | white               | zinc-900 `#18181b`  | Cards, modals, navbar, inputs                   |
+| `surface-subtle` | `bg-surface-subtle`        | Stone 100 `#f1f1ed` | zinc-800 `#27272a`  | Inner boxes, pills, tracks, elevated dark cards |
+| `edge`           | `border-edge`, `ring-edge` | stone-200 `#e7e5e4` | zinc-700 `#3f3f46`  | Borders                                         |
+| `edge-subtle`    | `divide-edge-subtle`       | Stone 100           | zinc-800            | Row dividers                                    |
+| `ink`            | `text-ink`, `fill-ink`     | Stone 900 `#0c0c0c` | zinc-50 `#fafafa`   | Primary text                                    |
+| `ink-secondary`  | `text-ink-secondary`       | Stone 600 `#52525b` | zinc-400 `#a1a1aa`  | Secondary text, labels                          |
+| `ink-muted`      | `text-ink-muted`           | stone-400 `#a8a29e` | zinc-500 `#71717a`  | Muted text, placeholders                        |
+| `hover`          | `hover:bg-hover`           | Stone 100           | zinc-800            | Hover surfaces                                  |
 
 Never use `slate-*` (removed) or raw `stone-*`/`zinc-*`/`white` in components.
 
