@@ -14,6 +14,7 @@
   import Select from "$components/ui/Select.svelte";
   import Toggle from "$components/ui/Toggle.svelte";
   import { formatCurrency, toDateInput } from "$utils/formatting";
+  import { m } from "$lib/paraglide/messages";
 
   interface Props {
     categories: Category[];
@@ -78,8 +79,10 @@
 
   // A credit card can only hold expenses, so income hides card options.
   const sourceOptions = $derived([
-    ...accounts.map((a) => ({ value: `account:${a.id}`, label: `${a.name} (account)` })),
-    ...(kind === "expense" ? creditCards.map((c) => ({ value: `card:${c.id}`, label: `${c.name} (card)` })) : [])
+    ...accounts.map((a) => ({ value: `account:${a.id}`, label: m.source_account_suffix({ name: a.name }) })),
+    ...(kind === "expense"
+      ? creditCards.map((c) => ({ value: `card:${c.id}`, label: m.source_card_suffix({ name: c.name }) }))
+      : [])
   ]);
 
   const onCard = $derived(source.startsWith("card:"));
@@ -95,12 +98,12 @@
 
   function validate(): string[] {
     const e: string[] = [];
-    if (!description.trim()) e.push("Description is required.");
-    if (!amount || Number(amount) <= 0) e.push("Amount must be greater than 0.");
-    if (!categoryId) e.push("Select a category.");
-    if (!source) e.push("Select an account or credit card.");
+    if (!description.trim()) e.push(m.form_err_description());
+    if (!amount || Number(amount) <= 0) e.push(m.form_err_amount());
+    if (!categoryId) e.push(m.form_err_category());
+    if (!source) e.push(m.form_err_source());
     if (repeat && (!Number.isInteger(Number(occurrences)) || occurrences < 2 || occurrences > 60)) {
-      e.push("Repeat between 2 and 60 times.");
+      e.push(m.form_err_repeat());
     }
     return e;
   }
@@ -132,7 +135,7 @@
     try {
       await onsubmit(input, series);
     } catch (err) {
-      errors = err instanceof Error && "errors" in err ? (err as { errors: string[] }).errors : ["Could not save."];
+      errors = err instanceof Error && "errors" in err ? (err as { errors: string[] }).errors : [m.form_err_save()];
     } finally {
       submitting = false;
     }
@@ -161,29 +164,34 @@
             categoryId = "";
           }}
         >
-          {k}
+          {k === "expense" ? m.kind_expense() : m.kind_income()}
         </button>
       {/each}
     </div>
   {/if}
 
-  <Input label="Description" bind:value={description} placeholder="e.g. Groceries" required />
+  <Input
+    label={m.field_description()}
+    bind:value={description}
+    placeholder={m.placeholder_transaction_description()}
+    required
+  />
 
   <div class="grid grid-cols-2 gap-3">
-    <Input label="Amount" type="number" step="0.01" min="0" bind:value={amount} placeholder="0.00" required />
-    <Input label="Date" type="date" bind:value={date} required />
+    <Input label={m.field_amount()} type="number" step="0.01" min="0" bind:value={amount} placeholder="0.00" required />
+    <Input label={m.field_date()} type="date" bind:value={date} required />
   </div>
 
   {#if onCard}
-    <Toggle bind:checked={paid} label="Settled" variant="expense" onchange={() => (paidPinned = true)} />
+    <Toggle bind:checked={paid} label={m.field_settled()} variant="expense" onchange={() => (paidPinned = true)} />
   {/if}
 
   <div class="grid grid-cols-2 gap-3">
-    <Select label="Account / Card" bind:value={source} options={sourceOptions} />
+    <Select label={m.field_account_or_card()} bind:value={source} options={sourceOptions} />
     <Select
-      label="Category"
+      label={m.field_category()}
       bind:value={categoryId}
-      placeholder="Select a category"
+      placeholder={m.placeholder_select_category()}
       options={availableCategories.map((c) => ({ value: c.id, label: c.name }))}
     />
   </div>
@@ -191,39 +199,39 @@
   {#if !transaction}
     <div class="grid grid-cols-2 gap-3">
       <Select
-        label="Repeat"
+        label={m.field_repeat()}
         bind:value={repeat}
         options={[
-          { value: "", label: "One-time" },
-          { value: "installments", label: "Installments (split total)" },
-          { value: "fixed", label: "Fixed monthly (same amount)" }
+          { value: "", label: m.repeat_one_time() },
+          { value: "installments", label: m.repeat_installments() },
+          { value: "fixed", label: m.repeat_fixed() }
         ]}
       />
       {#if repeat}
-        <Input label="Times" type="number" min="2" max="60" bind:value={occurrences} />
+        <Input label={m.field_times()} type="number" min="2" max="60" bind:value={occurrences} />
       {/if}
     </div>
     {#if perInstallment}
       <p class="-mt-2 text-xs text-ink-muted">
-        {occurrences} monthly installments of {formatCurrency(perInstallment)}
+        {m.form_installments_preview({ count: occurrences, amount: formatCurrency(perInstallment) })}
       </p>
     {:else if repeat === "fixed"}
-      <p class="-mt-2 text-xs text-ink-muted">Repeats this amount every month; future months start as pending.</p>
+      <p class="-mt-2 text-xs text-ink-muted">{m.form_fixed_hint()}</p>
     {/if}
   {:else if transaction.series_id}
     <p class="-mt-1 text-xs text-ink-muted">
-      This is part of a {transaction.installment_total
-        ? `${transaction.installment_total}x installment plan`
-        : "monthly series"} — your changes apply to this occurrence only.
+      {transaction.installment_total
+        ? m.form_series_installments({ count: transaction.installment_total })
+        : m.form_series_fixed()}
     </p>
   {/if}
 
   <div class="flex justify-end gap-2 pt-2">
     {#if oncancel}
-      <Button type="button" variant="secondary" onclick={oncancel}>Cancel</Button>
+      <Button type="button" variant="secondary" onclick={oncancel}>{m.action_cancel()}</Button>
     {/if}
     <Button type="submit" variant={kind === "expense" ? "expense" : "income"} loading={submitting}>
-      {transaction ? "Save changes" : `Save ${kind}`}
+      {transaction ? m.form_save_changes() : kind === "expense" ? m.form_save_expense() : m.form_save_income()}
     </Button>
   </div>
 </form>

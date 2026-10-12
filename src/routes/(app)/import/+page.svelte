@@ -11,6 +11,8 @@
   import Modal from "$components/ui/Modal.svelte";
   import Select from "$components/ui/Select.svelte";
   import type { PageData } from "./$types";
+  import { m } from "$lib/paraglide/messages";
+  import { formatMonth } from "$utils/formatting";
 
   let { data }: { data: PageData } = $props();
   const api = createApiClient(fetch);
@@ -78,7 +80,7 @@
       current = started;
       poll(started.id, "awaiting_input");
     } catch (err) {
-      error = err instanceof Error ? err.message : "Upload failed.";
+      error = err instanceof Error ? err.message : m.import_err_upload();
     }
   }
 
@@ -109,7 +111,7 @@
       current = started;
       poll(started.id, "completed");
     } catch (err) {
-      error = err instanceof Error ? err.message : "Could not start the import.";
+      error = err instanceof Error ? err.message : m.import_err_start();
     }
   }
 
@@ -125,7 +127,7 @@
         if (latest.status === "awaiting_input") seedForm(latest);
         if (latest.status === until || latest.status === "failed") break;
       } catch {
-        error = "Lost track of the import. Reload to see where it landed.";
+        error = m.import_err_lost();
         break;
       }
     }
@@ -135,34 +137,29 @@
   const summary = $derived.by(() => {
     const r = current?.report ?? {};
     return [
-      { label: "Transactions", value: r.imported ?? 0 },
-      { label: "Accounts", value: r.accounts ?? 0 },
-      { label: "Cards", value: r.credit_cards ?? 0 },
-      { label: "Categories", value: r.categories ?? 0 }
+      { label: m.import_sum_transactions(), value: r.imported ?? 0 },
+      { label: m.import_sum_accounts(), value: r.accounts ?? 0 },
+      { label: m.import_sum_cards(), value: r.credit_cards ?? 0 },
+      { label: m.import_sum_categories(), value: r.categories ?? 0 }
     ];
   });
 
   const skipped = $derived.by(() => {
     const r = current?.report ?? {};
     return [
-      { label: "zero amount", value: r.skipped_zero ?? 0 },
-      { label: "credits on a card", value: r.skipped_card_credit ?? 0 },
-      { label: "unreadable date", value: r.skipped_no_date ?? 0 }
+      { label: m.import_skip_zero(), value: r.skipped_zero ?? 0 },
+      { label: m.import_skip_card_credit(), value: r.skipped_card_credit ?? 0 },
+      { label: m.import_skip_no_date(), value: r.skipped_no_date ?? 0 }
     ].filter((row) => row.value > 0);
   });
 
-  function monthLabel(month: string) {
-    const [year, m] = month.split("-");
-    return `${new Date(Number(year), Number(m) - 1).toLocaleString("en", { month: "long" })} ${year}`;
-  }
 </script>
 
 <div class="mx-auto flex max-w-2xl flex-col gap-6">
   <div>
-    <h1 class="text-xl font-semibold text-ink">Import from Organizze</h1>
+    <h1 class="text-xl font-semibold text-ink">{m.import_heading()}</h1>
     <p class="mt-1 text-sm text-ink-secondary">
-      Upload the <code class="rounded bg-hover px-1 py-0.5 text-xs">.xls</code> export from Organizze
-      (Transactions → menu → export). Select all accounts, over the whole period.
+      {m.import_intro({ extension: ".xls" })}
     </p>
   </div>
 
@@ -172,10 +169,7 @@
         <div class="flex gap-3">
           <AlertTriangle size={18} class="mt-0.5 shrink-0 text-expense" aria-hidden="true" />
           <p class="text-sm text-ink-secondary">
-            Importing <strong class="text-ink">replaces everything</strong> in this account — the
-            {data.accounts.length} account{data.accounts.length === 1 ? "" : "s"} you have now, plus their
-            cards, categories and transactions. The export is a full history, so merging it would duplicate
-            every row.
+            {m.import_replace_warning({ count: data.accounts.length })}
           </p>
         </div>
       </Card>
@@ -184,7 +178,7 @@
     <Card>
       <div class="flex flex-col gap-4">
         <label class="flex flex-col gap-1.5 text-sm font-medium text-ink-secondary">
-          Export file
+          {m.import_file_label()}
           <input
             type="file"
             accept=".xls,.xlsx"
@@ -201,7 +195,7 @@
         <div class="flex justify-end">
           <Button onclick={submit} disabled={!file || busy} loading={busy}>
             <Upload size={15} aria-hidden="true" />
-            {busy ? "Reading the file…" : "Continue"}
+            {busy ? m.import_reading() : m.import_continue()}
           </Button>
         </div>
       </div>
@@ -210,21 +204,20 @@
 
   {#if preview}
     <Card>
-      <h2 class="text-sm font-semibold text-ink">A few things the export does not say</h2>
+      <h2 class="text-sm font-semibold text-ink">{m.import_step2_title()}</h2>
       <p class="mt-1 text-sm text-ink-secondary">
-        Nothing has been written yet. The closing day was read from the file; the rest is only in your
-        head or on your statement.
+        {m.import_step2_intro()}
       </p>
 
       {#if invoiceMonths.length}
         <div class="mt-5">
           <Select
-            label="First invoice you have NOT paid yet"
+            label={m.import_open_from_label()}
             bind:value={openFrom}
-            options={invoiceMonths.map((m) => ({ value: m, label: monthLabel(m) }))}
+            options={invoiceMonths.map((month) => ({ value: month, label: formatMonth(month) }))}
           />
           <p class="mt-1 text-xs text-ink-muted">
-            Everything before it is imported as settled; this one and later stay open.
+            {m.import_open_from_hint()}
           </p>
         </div>
       {/if}
@@ -234,14 +227,14 @@
         <div class="mt-5 rounded-xl border border-edge p-3">
           <p class="text-sm font-medium text-ink">{card.name}</p>
           <p class="text-xs text-ink-muted">
-            {card.rows.toLocaleString()} transactions · closing day {card.closing_day} read from the file
+            {m.import_card_meta({ rows: card.rows.toLocaleString(), day: card.closing_day })}
           </p>
           {#if form}
             <div class="mt-3 grid gap-3 sm:grid-cols-3">
-              <Input label="Closing day" type="number" min="1" max="31" bind:value={form.closing_day} />
-              <Input label="Due day" type="number" min="1" max="31" placeholder="10" bind:value={form.due_day} />
+              <Input label={m.field_closing_day()} type="number" min="1" max="31" bind:value={form.closing_day} />
+              <Input label={m.field_due_day()} type="number" min="1" max="31" placeholder="10" bind:value={form.due_day} />
               <Input
-                label="Credit limit"
+                label={m.field_credit_limit()}
                 type="number"
                 step="0.01"
                 min="0"
@@ -250,15 +243,15 @@
               />
             </div>
             <p class="mt-2 text-xs text-ink-muted">
-              Leave a field blank if you don't know it — you can set it later in Credit cards.
+              {m.import_card_hint()}
             </p>
           {/if}
         </div>
       {/each}
 
       <div class="mt-5">
-        <p class="text-sm font-medium text-ink">Accounts</p>
-        <p class="text-xs text-ink-muted">Untick any account that should not count towards your total balance.</p>
+        <p class="text-sm font-medium text-ink">{m.import_accounts_title()}</p>
+        <p class="text-xs text-ink-muted">{m.import_accounts_hint()}</p>
         <div class="mt-2 grid gap-1 sm:grid-cols-2">
           {#each preview.accounts ?? [] as account (account.name)}
             <label
@@ -278,7 +271,7 @@
 
       <div class="mt-5 flex justify-end">
         <Button onclick={confirmImport} loading={writing} disabled={writing}>
-          {writing ? "Importing…" : "Import"}
+          {writing ? m.import_writing() : m.import_submit()}
         </Button>
       </div>
     </Card>
@@ -286,7 +279,7 @@
 
   {#if current?.status === "completed"}
     <Card>
-      <h2 class="text-sm font-semibold text-ink">Imported {current.filename}</h2>
+      <h2 class="text-sm font-semibold text-ink">{m.import_done({ filename: current.filename })}</h2>
       <dl class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {#each summary as row (row.label)}
           <div class="rounded-xl bg-hover p-3">
@@ -297,28 +290,27 @@
       </dl>
       {#if skipped.length}
         <p class="mt-3 text-xs text-ink-muted">
-          Skipped rows this app cannot represent:
-          {skipped.map((row) => `${row.value} with ${row.label}`).join(", ")}.
+          {m.import_skipped({
+            rows: skipped.map((row) => m.import_skipped_item({ count: row.value, reason: row.label })).join(", ")
+          })}
         </p>
       {/if}
     </Card>
   {:else if current?.status === "failed"}
     <Card>
-      <h2 class="text-sm font-semibold text-expense">Import failed</h2>
+      <h2 class="text-sm font-semibold text-expense">{m.import_failed()}</h2>
       <p class="mt-1 text-sm text-ink-secondary">{current.error_message}</p>
-      <p class="mt-2 text-xs text-ink-muted">Nothing was changed — the import runs all or nothing.</p>
+      <p class="mt-2 text-xs text-ink-muted">{m.import_failed_hint()}</p>
     </Card>
   {/if}
 </div>
 
-<Modal open={confirming} title="Replace everything?" onclose={() => (confirming = false)}>
+<Modal open={confirming} title={m.import_confirm_title()} onclose={() => (confirming = false)}>
   <p class="text-sm text-ink-secondary">
-    This deletes your {data.accounts.length} account{data.accounts.length === 1 ? "" : "s"}, along with
-    their cards, categories and transactions, and loads
-    <strong class="text-ink">{file?.name}</strong> in their place. It cannot be undone.
+    {m.import_confirm_body({ count: data.accounts.length, filename: file?.name ?? "" })}
   </p>
   <div class="mt-5 flex justify-end gap-2">
-    <Button variant="secondary" onclick={() => (confirming = false)}>Cancel</Button>
-    <Button variant="expense" onclick={upload}>Replace and import</Button>
+    <Button variant="secondary" onclick={() => (confirming = false)}>{m.action_cancel()}</Button>
+    <Button variant="expense" onclick={upload}>{m.import_confirm_submit()}</Button>
   </div>
 </Modal>

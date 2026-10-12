@@ -2,6 +2,7 @@
   import type { Transaction } from "$api/types";
   import Skeleton from "$components/ui/Skeleton.svelte";
   import TransactionRow from "./TransactionRow.svelte";
+  import { m } from "$lib/paraglide/messages";
 
   interface Props {
     transactions: Transaction[];
@@ -17,10 +18,10 @@
   <table class="w-full text-left text-sm">
     <thead class="bg-surface-subtle text-xs uppercase tracking-wide text-ink-muted">
       <tr>
-        <th class="px-4 py-3 font-medium">Description</th>
-        <th class="px-4 py-3 font-medium">Date</th>
-        <th class="px-4 py-3 font-medium">Status</th>
-        <th class="px-4 py-3 text-right font-medium">Amount</th>
+        <th class="px-4 py-3 font-medium">{m.col_description()}</th>
+        <th class="px-4 py-3 font-medium">{m.col_date()}</th>
+        <th class="px-4 py-3 font-medium">{m.col_status()}</th>
+        <th class="px-4 py-3 text-right font-medium">{m.col_amount()}</th>
         <th class="px-4 py-3"></th>
       </tr>
     </thead>
@@ -33,7 +34,7 @@
         {/each}
       {:else if transactions.length === 0}
         <tr>
-          <td class="px-4 py-10 text-center text-ink-muted" colspan="5">No transactions found.</td>
+          <td class="px-4 py-10 text-center text-ink-muted" colspan="5">{m.tx_empty()}</td>
         </tr>
       {:else}
         {#each transactions as transaction (transaction.id)}

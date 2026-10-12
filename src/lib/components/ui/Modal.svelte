@@ -1,6 +1,7 @@
 <script lang="ts">
   import X from "@lucide/svelte/icons/x";
   import type { Snippet } from "svelte";
+  import { m } from "$lib/paraglide/messages";
 
   interface Props {
     open: boolean;
@@ -19,7 +20,7 @@
 
 {#if open}
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <button class="absolute inset-0 bg-stone-950/40" aria-label="Close" onclick={onclose}></button>
+    <button class="absolute inset-0 bg-stone-950/40" aria-label={m.action_close()} onclick={onclose}></button>
     <div
       class="relative z-10 w-full max-w-lg rounded-2xl bg-surface p-6 shadow-lg"
       role="dialog"
@@ -32,7 +33,7 @@
           class="cursor-pointer rounded-xl p-1.5 text-ink-muted transition duration-150 hover:bg-hover hover:text-ink-secondary"
           onclick={onclose}
         >
-          <span class="sr-only">Close</span>
+          <span class="sr-only">{m.action_close()}</span>
           <X size={18} aria-hidden="true" />
         </button>
       </div>

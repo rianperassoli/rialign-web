@@ -36,6 +36,7 @@ export default ts.config(
     }
   },
   {
-    ignores: ["build/", ".svelte-kit/", "package/", "node_modules/"]
+    // src/lib/paraglide is compiled by the Paraglide Vite plugin.
+    ignores: ["build/", ".svelte-kit/", "package/", "node_modules/", "src/lib/paraglide/"]
   }
 );

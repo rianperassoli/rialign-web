@@ -10,6 +10,7 @@
   import { useAccounts } from "$composables/useAccounts.svelte";
   import { formatCurrency } from "$utils/formatting";
   import type { PageData } from "./$types";
+  import { m } from "$lib/paraglide/messages";
 
   let { data }: { data: PageData } = $props();
   // SSR seed, read once: from here on the composable owns this state and
@@ -73,21 +74,23 @@
   }
 </script>
 
-<svelte:head><title>Accounts · Rialign</title></svelte:head>
+<svelte:head><title>{m.accounts_page_title()}</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h1 class="text-2xl font-bold text-ink">Accounts</h1>
+    <h1 class="text-2xl font-bold text-ink">{m.accounts_heading()}</h1>
     <p class="text-sm text-ink-muted">
-      {formatCurrency(total)} across {counted.length} account{counted.length === 1 ? "" : "s"}{accounts.items
-        .length > counted.length
-        ? ` · ${accounts.items.length - counted.length} not counted`
+      {counted.length === 1
+        ? m.accounts_summary_one({ total: formatCurrency(total) })
+        : m.accounts_summary({ total: formatCurrency(total), count: counted.length })}{accounts.items.length >
+      counted.length
+        ? ` · ${m.accounts_not_counted({ count: accounts.items.length - counted.length })}`
         : ""}
     </p>
   </div>
   <div class="flex gap-2">
-    <Button variant="secondary" disabled={accounts.items.length < 2} onclick={openTransfer}>Transfer</Button>
-    <Button onclick={() => (showForm = true)}><Plus size={16} aria-hidden="true" />New account</Button>
+    <Button variant="secondary" disabled={accounts.items.length < 2} onclick={openTransfer}>{m.quick_transfer()}</Button>
+    <Button onclick={() => (showForm = true)}><Plus size={16} aria-hidden="true" />{m.accounts_new()}</Button>
   </div>
 </div>
 
@@ -103,40 +106,40 @@
   </div>
 {:else}
   <p class="rounded-2xl border border-dashed border-edge p-10 text-center text-ink-muted">
-    No accounts yet. Create your first one.
+    {m.accounts_empty()}
   </p>
 {/if}
 
-<Modal open={showForm} title="New account" onclose={() => (showForm = false)}>
+<Modal open={showForm} title={m.accounts_new()} onclose={() => (showForm = false)}>
   <form class="flex flex-col gap-4" onsubmit={submit}>
-    <Input label="Name" bind:value={name} placeholder="e.g. Main Checking" required />
+    <Input label={m.field_name()} bind:value={name} placeholder={m.placeholder_account_name()} required />
     <Select
-      label="Type"
+      label={m.field_type()}
       bind:value={accountType}
       options={[
-        { value: "checking", label: "Checking" },
-        { value: "savings", label: "Savings" },
-        { value: "cash", label: "Cash" },
-        { value: "other", label: "Other" }
+        { value: "checking", label: m.account_type_checking() },
+        { value: "savings", label: m.account_type_savings() },
+        { value: "cash", label: m.account_type_cash() },
+        { value: "other", label: m.account_type_other() }
       ]}
     />
-    <Input label="Initial balance" type="number" step="0.01" bind:value={initialBalance} placeholder="0.00" />
+    <Input label={m.field_initial_balance()} type="number" step="0.01" bind:value={initialBalance} placeholder="0.00" />
     <div class="flex justify-end gap-2 pt-2">
-      <Button type="button" variant="secondary" onclick={() => (showForm = false)}>Cancel</Button>
-      <Button type="submit" loading={accounts.saving}>Create account</Button>
+      <Button type="button" variant="secondary" onclick={() => (showForm = false)}>{m.action_cancel()}</Button>
+      <Button type="submit" loading={accounts.saving}>{m.accounts_create_submit()}</Button>
     </div>
   </form>
 </Modal>
 
-<Modal open={showTransfer} title="Transfer between accounts" onclose={() => (showTransfer = false)}>
+<Modal open={showTransfer} title={m.modal_new_transfer()} onclose={() => (showTransfer = false)}>
   <form class="flex flex-col gap-4" onsubmit={submitTransfer}>
-    <Select label="From" bind:value={fromId} options={accountOptions} />
-    <Select label="To" bind:value={toId} options={accountOptions} />
-    <Input label="Amount" type="number" step="0.01" bind:value={transferAmount} placeholder="0.00" required />
-    <Input label="Description" bind:value={transferDescription} placeholder="e.g. Move to savings" />
+    <Select label={m.field_from()} bind:value={fromId} options={accountOptions} />
+    <Select label={m.field_to()} bind:value={toId} options={accountOptions} />
+    <Input label={m.field_amount()} type="number" step="0.01" bind:value={transferAmount} placeholder="0.00" required />
+    <Input label={m.field_description()} bind:value={transferDescription} placeholder={m.placeholder_transfer_description()} />
     <div class="flex justify-end gap-2 pt-2">
-      <Button type="button" variant="secondary" onclick={() => (showTransfer = false)}>Cancel</Button>
-      <Button type="submit" loading={accounts.saving} disabled={fromId === toId}>Transfer</Button>
+      <Button type="button" variant="secondary" onclick={() => (showTransfer = false)}>{m.action_cancel()}</Button>
+      <Button type="submit" loading={accounts.saving} disabled={fromId === toId}>{m.quick_transfer()}</Button>
     </div>
   </form>
 </Modal>

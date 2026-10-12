@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { m } from "$lib/paraglide/messages";
 
   let { children }: { children: Snippet } = $props();
 </script>
@@ -8,7 +9,7 @@
   <div class="w-full max-w-sm">
     <div class="mb-6 text-center">
       <h1 class="text-2xl font-bold text-brand-700">Rialign</h1>
-      <p class="text-sm text-ink-muted">Your calm financial companion.</p>
+      <p class="text-sm text-ink-muted">{m.auth_tagline()}</p>
     </div>
     <div class="rounded-2xl border border-edge bg-surface p-6 shadow-xs">
       {@render children()}

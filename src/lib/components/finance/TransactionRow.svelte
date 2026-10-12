@@ -2,6 +2,7 @@
   import type { Transaction } from "$api/types";
   import Badge from "$components/ui/Badge.svelte";
   import { formatCurrency, formatDate, toDateInput } from "$utils/formatting";
+  import { m } from "$lib/paraglide/messages";
 
   interface Props {
     transaction: Transaction;
@@ -28,7 +29,7 @@
     <p class="text-xs text-ink-muted">
       {#if transaction.category}{transaction.category.name}{/if}
       {#if transaction.series_id && !transaction.installment_number}
-        <span class="text-ink-muted">· fixed</span>
+        <span class="text-ink-muted">· {m.tx_fixed()}</span>
       {/if}
     </p>
   </td>
@@ -39,15 +40,17 @@
     {#if ontogglepaid}
       <button
         class="cursor-pointer"
-        title={transaction.paid ? "Mark as pending" : "Mark as paid"}
+        title={transaction.paid ? m.tx_mark_pending() : m.tx_mark_paid()}
         onclick={() => ontogglepaid?.(transaction)}
       >
         <Badge tone={transaction.paid ? "income" : overdue ? "expense" : "warning"}>
-          {transaction.paid ? "Paid" : overdue ? "Overdue" : "Pending"}
+          {transaction.paid ? m.status_paid() : overdue ? m.status_overdue() : m.status_pending()}
         </Badge>
       </button>
     {:else}
-      <Badge tone={transaction.paid ? "neutral" : "warning"}>{transaction.paid ? "Paid" : "Pending"}</Badge>
+      <Badge tone={transaction.paid ? "neutral" : "warning"}>
+        {transaction.paid ? m.status_paid() : m.status_pending()}
+      </Badge>
     {/if}
   </td>
   <td class="px-4 py-3 text-right font-semibold {isIncome ? 'text-income' : 'text-expense'}">
@@ -57,12 +60,12 @@
     <div class="flex items-center justify-end gap-3">
       {#if onedit}
         <button class="text-xs text-ink-muted hover:text-ink" onclick={() => onedit?.(transaction)}>
-          Edit
+          {m.action_edit()}
         </button>
       {/if}
       {#if onremove}
         <button class="text-xs text-ink-muted hover:text-expense" onclick={() => onremove?.(transaction)}>
-          Delete
+          {m.action_delete()}
         </button>
       {/if}
     </div>

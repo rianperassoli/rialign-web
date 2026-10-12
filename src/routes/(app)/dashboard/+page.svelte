@@ -13,6 +13,7 @@
   import { useDashboard } from "$composables/useDashboard.svelte";
   import { formatCurrency, formatMonth, parseMoney } from "$utils/formatting";
   import type { PageData } from "./$types";
+  import { m } from "$lib/paraglide/messages";
 
   let { data }: { data: PageData } = $props();
   // SSR seed, read once: from here on the composable owns this state and
@@ -21,16 +22,22 @@
   const api = createApiClient();
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = $derived(
+    hour < 12
+      ? m.dash_greeting_morning({ name: data.user.name })
+      : hour < 18
+        ? m.dash_greeting_afternoon({ name: data.user.name })
+        : m.dash_greeting_evening({ name: data.user.name })
+  );
 
   /* ---- Quick-action modals (Organizze-style: create in place, no navigation) ---- */
   type QuickAction = "expense" | "income" | "transfer";
   let quickModal = $state<QuickAction | null>(null);
 
   const quickActions = [
-    { action: "expense" as QuickAction, label: "Expense", icon: Minus, tint: "text-expense" },
-    { action: "income" as QuickAction, label: "Income", icon: Plus, tint: "text-income" },
-    { action: "transfer" as QuickAction, label: "Transfer", icon: ArrowLeftRight, tint: "text-ink-secondary" }
+    { action: "expense" as QuickAction, label: m.quick_expense(), icon: Minus, tint: "text-expense" },
+    { action: "income" as QuickAction, label: m.quick_income(), icon: Plus, tint: "text-income" },
+    { action: "transfer" as QuickAction, label: m.quick_transfer(), icon: ArrowLeftRight, tint: "text-ink-secondary" }
   ];
 
   async function createTransaction(input: TransactionInput, series?: SeriesOptions) {
@@ -57,19 +64,19 @@
   const maxCategory = $derived(Math.max(1, ...topCategories.map((c) => parseMoney(c.total))));
 </script>
 
-<svelte:head><title>Dashboard · Rialign</title></svelte:head>
+<svelte:head><title>{m.dash_page_title()}</title></svelte:head>
 
 <Card class="mb-6">
   <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <p class="text-lg font-semibold text-ink">{greeting}, {data.user.name}!</p>
+      <p class="text-lg font-semibold text-ink">{greeting}</p>
       <div class="mt-3 flex gap-8 text-sm">
         <div>
-          <p class="text-xs text-ink-muted">Monthly income</p>
+          <p class="text-xs text-ink-muted">{m.dash_monthly_income()}</p>
           <p class="font-semibold text-income">{formatCurrency(dash.data.totals.income)}</p>
         </div>
         <div>
-          <p class="text-xs text-ink-muted">Monthly expenses</p>
+          <p class="text-xs text-ink-muted">{m.dash_monthly_expenses()}</p>
           <p class="font-semibold text-expense">{formatCurrency(dash.data.totals.expense)}</p>
         </div>
       </div>
@@ -77,7 +84,7 @@
 
     <div class="flex items-center gap-6">
       <div class="w-full sm:w-auto">
-        <p class="mb-2 text-center text-sm font-semibold text-ink-secondary">Quick access</p>
+        <p class="mb-2 text-center text-sm font-semibold text-ink-secondary">{m.dash_quick_access()}</p>
         <!-- On a phone the three actions split the full width; from sm: they
              go back to fixed-width tiles so they do not stretch absurdly. -->
         <div class="grid grid-cols-3 gap-2 sm:flex">
@@ -100,87 +107,87 @@
   <!-- Accounts column -->
   <div>
     <div class="mb-4 border-l-4 border-income pl-3">
-      <p class="text-sm text-ink-muted">Overall balance</p>
+      <p class="text-sm text-ink-muted">{m.dash_overall_balance()}</p>
       <p class="text-2xl font-semibold text-ink">{formatCurrency(dash.data.consolidated_balance)}</p>
     </div>
 
-    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">My accounts</h2>
+    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">{m.dash_my_accounts()}</h2>
     <div class="divide-y divide-edge-subtle overflow-hidden rounded-2xl border border-edge bg-surface shadow-xs">
       {#each countedAccounts as account (account.id)}
         <AccountCard {account} />
       {:else}
-        <p class="px-5 py-4 text-sm text-ink-muted">No accounts yet.</p>
+        <p class="px-5 py-4 text-sm text-ink-muted">{m.dash_no_accounts()}</p>
       {/each}
     </div>
     <a href="/accounts" class="mt-3 inline-block text-xs font-medium text-brand-600 hover:text-brand-700">
-      Manage accounts →
+      {m.dash_manage_accounts()}
     </a>
   </div>
 
   <!-- Credit cards column -->
   <div>
     <div class="mb-4 border-l-4 border-expense pl-3">
-      <p class="text-sm text-ink-muted">Invoices of {formatMonth(dash.data.period.from)}</p>
+      <p class="text-sm text-ink-muted">{m.dash_invoices_of({ month: formatMonth(dash.data.period.from) })}</p>
       <p class="text-2xl font-semibold text-ink">{formatCurrency(-invoicesTotal || 0)}</p>
     </div>
 
-    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">My cards</h2>
+    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">{m.dash_my_cards()}</h2>
     <div class="flex flex-col gap-3">
       {#each dash.data.credit_cards as card (card.id)}
         <div class="rounded-2xl border border-edge bg-surface p-5 shadow-xs">
           <div class="flex items-start justify-between">
             <div>
               <p class="font-medium text-ink">{card.name}</p>
-              <p class="text-xs text-ink-muted">Closes day {card.closing_day}</p>
+              <p class="text-xs text-ink-muted">{m.card_closes_day({ day: card.closing_day })}</p>
             </div>
             <a
               href="/credit_cards/{card.id}"
               class="rounded-xl bg-brand-soft px-3 py-1.5 text-sm font-medium text-brand-soft-ink hover:bg-brand-soft-hover"
             >
-              View invoice
+              {m.card_view_invoice()}
             </a>
           </div>
           <div class="mt-3 grid grid-cols-3 gap-3 rounded-xl bg-surface-subtle p-3 text-sm">
             <div>
-              <p class="text-xs text-ink-muted">Available limit</p>
+              <p class="text-xs text-ink-muted">{m.card_available_limit()}</p>
               <p class="font-semibold text-ink">{formatCurrency(card.available_limit)}</p>
             </div>
             <div class="text-right">
-              <p class="text-xs text-ink-muted">To pay (day {card.due_day})</p>
+              <p class="text-xs text-ink-muted">{m.card_to_pay_day({ day: card.due_day })}</p>
               <p class="font-semibold text-expense">{formatCurrency(card.open_invoice)}</p>
             </div>
             <div class="text-right">
-              <p class="text-xs text-ink-muted">Next invoice</p>
+              <p class="text-xs text-ink-muted">{m.card_next_invoice()}</p>
               <p class="font-semibold text-ink-secondary">{formatCurrency(card.next_invoice)}</p>
             </div>
           </div>
         </div>
       {:else}
-        <p class="text-sm text-ink-muted">No credit cards yet.</p>
+        <p class="text-sm text-ink-muted">{m.dash_no_cards()}</p>
       {/each}
     </div>
     <a href="/credit_cards" class="mt-3 inline-block text-xs font-medium text-brand-600 hover:text-brand-700">
-      Manage cards →
+      {m.dash_manage_cards()}
     </a>
   </div>
 </div>
 
 <div class="mt-8 grid gap-6 lg:grid-cols-2">
-  <Card title="Forecast (pending)">
+  <Card title={m.dash_forecast()}>
     <dl class="space-y-2 text-sm">
       <div class="flex justify-between">
-        <dt class="text-ink-muted">Expected income</dt>
+        <dt class="text-ink-muted">{m.dash_expected_income()}</dt>
         <dd class="font-medium text-income">{formatCurrency(dash.data.forecast.income)}</dd>
       </div>
       <div class="flex justify-between">
-        <dt class="text-ink-muted">Expected expenses</dt>
+        <dt class="text-ink-muted">{m.dash_expected_expenses()}</dt>
         <dd class="font-medium text-expense">{formatCurrency(dash.data.forecast.expense)}</dd>
       </div>
     </dl>
   </Card>
 
   {#if topCategories.length}
-    <Card title="Top spending categories">
+    <Card title={m.dash_top_categories()}>
       <ul class="flex flex-col gap-2.5">
         {#each topCategories as cat (cat.category_id)}
           <li>
@@ -199,13 +206,13 @@
         {/each}
       </ul>
       <a href="/reports" class="mt-3 inline-block text-xs font-medium text-brand-600 hover:text-brand-700">
-        View full reports →
+        {m.dash_full_reports()}
       </a>
     </Card>
   {/if}
 </div>
 
-<Modal open={quickModal === "expense"} title="New expense" onclose={() => (quickModal = null)}>
+<Modal open={quickModal === "expense"} title={m.modal_new_expense()} onclose={() => (quickModal = null)}>
   <TransactionForm
     initialKind="expense"
     categories={data.categories}
@@ -216,7 +223,7 @@
   />
 </Modal>
 
-<Modal open={quickModal === "income"} title="New income" onclose={() => (quickModal = null)}>
+<Modal open={quickModal === "income"} title={m.modal_new_income()} onclose={() => (quickModal = null)}>
   <TransactionForm
     initialKind="income"
     categories={data.categories}
@@ -227,6 +234,6 @@
   />
 </Modal>
 
-<Modal open={quickModal === "transfer"} title="Transfer between accounts" onclose={() => (quickModal = null)}>
+<Modal open={quickModal === "transfer"} title={m.modal_new_transfer()} onclose={() => (quickModal = null)}>
   <TransferForm accounts={dash.data.accounts} oncancel={() => (quickModal = null)} onsubmit={createTransfer} />
 </Modal>

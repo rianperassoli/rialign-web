@@ -8,6 +8,7 @@
   import Select from "$components/ui/Select.svelte";
   import { useCategories } from "$composables/useCategories.svelte";
   import type { PageData } from "./$types";
+  import { m } from "$lib/paraglide/messages";
 
   let { data }: { data: PageData } = $props();
   // SSR seed, read once: from here on the composable owns this state and
@@ -51,14 +52,14 @@
   }
 </script>
 
-<svelte:head><title>Categories · Rialign</title></svelte:head>
+<svelte:head><title>{m.categories_page_title()}</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h1 class="text-2xl font-bold text-ink">Categories</h1>
-    <p class="text-sm text-ink-muted">{categories.items.length} categories</p>
+    <h1 class="text-2xl font-bold text-ink">{m.categories_heading()}</h1>
+    <p class="text-sm text-ink-muted">{m.categories_count({ count: categories.items.length })}</p>
   </div>
-  <Button onclick={openCreate}><Plus size={16} aria-hidden="true" />New category</Button>
+  <Button onclick={openCreate}><Plus size={16} aria-hidden="true" />{m.categories_new()}</Button>
 </div>
 
 {#if categories.error}
@@ -66,7 +67,7 @@
 {/if}
 
 <div class="grid gap-6 md:grid-cols-2">
-  {#each [{ label: "Income", list: categories.income }, { label: "Expense", list: categories.expense }] as group (group.label)}
+  {#each [{ label: m.kind_income(), list: categories.income, empty: m.categories_empty_income() }, { label: m.kind_expense(), list: categories.expense, empty: m.categories_empty_expense() }] as group (group.label)}
     <section>
       <h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-muted">{group.label}</h2>
       <div class="flex flex-col gap-2">
@@ -77,13 +78,13 @@
               <span class="font-medium text-ink">{category.name}</span>
             </div>
             <div class="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onclick={() => openEdit(category)}>Edit</Button>
-              <Button variant="ghost" size="sm" onclick={() => categories.remove(category.id)}>Archive</Button>
+              <Button variant="ghost" size="sm" onclick={() => openEdit(category)}>{m.action_edit()}</Button>
+              <Button variant="ghost" size="sm" onclick={() => categories.remove(category.id)}>{m.action_archive()}</Button>
             </div>
           </div>
         {:else}
           <p class="rounded-2xl border border-dashed border-edge p-6 text-center text-sm text-ink-muted">
-            No {group.label.toLowerCase()} categories yet.
+            {group.empty}
           </p>
         {/each}
       </div>
@@ -91,21 +92,21 @@
   {/each}
 </div>
 
-<Modal open={showForm} title={editing ? "Edit category" : "New category"} onclose={() => (showForm = false)}>
+<Modal open={showForm} title={editing ? m.categories_edit() : m.categories_new()} onclose={() => (showForm = false)}>
   <form class="flex flex-col gap-4" onsubmit={submit}>
-    <Input label="Name" bind:value={name} placeholder="e.g. Groceries" required />
+    <Input label={m.field_name()} bind:value={name} placeholder={m.placeholder_category_name()} required />
     <Select
-      label="Kind"
+      label={m.field_kind()}
       bind:value={kind}
       options={[
-        { value: "expense", label: "Expense" },
-        { value: "income", label: "Income" }
+        { value: "expense", label: m.kind_expense() },
+        { value: "income", label: m.kind_income() }
       ]}
     />
-    <Input label="Color" type="color" bind:value={color} />
+    <Input label={m.field_color()} type="color" bind:value={color} />
     <div class="flex justify-end gap-2 pt-2">
-      <Button type="button" variant="secondary" onclick={() => (showForm = false)}>Cancel</Button>
-      <Button type="submit" loading={categories.saving}>{editing ? "Save" : "Create"}</Button>
+      <Button type="button" variant="secondary" onclick={() => (showForm = false)}>{m.action_cancel()}</Button>
+      <Button type="submit" loading={categories.saving}>{editing ? m.action_save() : m.action_create()}</Button>
     </div>
   </form>
 </Modal>

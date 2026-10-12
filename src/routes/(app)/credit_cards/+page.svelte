@@ -9,6 +9,7 @@
   import { useCreditCards } from "$composables/useCreditCards.svelte";
   import { formatCurrency } from "$utils/formatting";
   import type { PageData } from "./$types";
+  import { m } from "$lib/paraglide/messages";
 
   let { data }: { data: PageData } = $props();
   // SSR seed, read once: from here on the composable owns this state and
@@ -16,12 +17,12 @@
   const cards = untrack(() => useCreditCards(data.creditCards));
 
   const accountOptions = $derived([
-    { value: "", label: "— none —" },
+    { value: "", label: m.option_none() },
     ...data.accounts.map((a) => ({ value: a.id, label: a.name }))
   ]);
 
   function accountName(id: number | null): string {
-    return data.accounts.find((a) => a.id === id)?.name ?? "Not set";
+    return data.accounts.find((a) => a.id === id)?.name ?? m.value_not_set();
   }
 
   let showForm = $state(false);
@@ -74,14 +75,14 @@
   }
 </script>
 
-<svelte:head><title>Credit cards · Rialign</title></svelte:head>
+<svelte:head><title>{m.cards_page_title()}</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h1 class="text-2xl font-bold text-ink">Credit cards</h1>
-    <p class="text-sm text-ink-muted">{cards.items.length} cards</p>
+    <h1 class="text-2xl font-bold text-ink">{m.cards_heading()}</h1>
+    <p class="text-sm text-ink-muted">{m.cards_count({ count: cards.items.length })}</p>
   </div>
-  <Button onclick={openCreate}><Plus size={16} aria-hidden="true" />New card</Button>
+  <Button onclick={openCreate}><Plus size={16} aria-hidden="true" />{m.cards_new()}</Button>
 </div>
 
 {#if cards.error}
@@ -95,54 +96,58 @@
         <div>
           <p class="font-medium text-ink">{card.name}</p>
           <p class="text-xs text-ink-muted">
-            Closes day {card.closing_day} · due day {card.due_day} · pays from {accountName(card.payment_account_id)}
+            {m.cards_meta({
+              closing: card.closing_day,
+              due: card.due_day,
+              account: accountName(card.payment_account_id)
+            })}
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onclick={() => openEdit(card)}>Edit</Button>
-          <Button variant="ghost" size="sm" onclick={() => cards.remove(card.id)}>Archive</Button>
+          <Button variant="ghost" size="sm" onclick={() => openEdit(card)}>{m.action_edit()}</Button>
+          <Button variant="ghost" size="sm" onclick={() => cards.remove(card.id)}>{m.action_archive()}</Button>
         </div>
       </div>
       <div class="mt-4 flex items-end justify-between">
         <div class="flex gap-8">
           <div>
-            <p class="text-xs text-ink-muted">To pay now (closed)</p>
+            <p class="text-xs text-ink-muted">{m.cards_to_pay_now()}</p>
             <p class="text-lg font-semibold text-expense">{formatCurrency(card.open_invoice)}</p>
-            <p class="text-xs text-ink-muted">{formatCurrency(card.available_limit)} available</p>
+            <p class="text-xs text-ink-muted">{m.cards_available({ amount: formatCurrency(card.available_limit) })}</p>
           </div>
           <div>
-            <p class="text-xs text-ink-muted">Next invoice (open)</p>
+            <p class="text-xs text-ink-muted">{m.cards_next_open()}</p>
             <p class="text-lg font-semibold text-ink-secondary">{formatCurrency(card.next_invoice)}</p>
-            <p class="text-xs text-ink-muted">closes day {card.closing_day}</p>
+            <p class="text-xs text-ink-muted">{m.cards_closes_day_lower({ day: card.closing_day })}</p>
           </div>
         </div>
         <a
           href="/credit_cards/{card.id}"
           class="rounded-xl bg-brand-soft px-3 py-1.5 text-sm font-medium text-brand-soft-ink hover:bg-brand-soft-hover"
         >
-          View invoice
+          {m.card_view_invoice()}
         </a>
       </div>
     </div>
   {:else}
     <p class="rounded-2xl border border-dashed border-edge p-10 text-center text-ink-muted">
-      No credit cards yet. Create your first one.
+      {m.cards_empty()}
     </p>
   {/each}
 </div>
 
-<Modal open={showForm} title={editing ? "Edit card" : "New card"} onclose={() => (showForm = false)}>
+<Modal open={showForm} title={editing ? m.cards_edit() : m.cards_new()} onclose={() => (showForm = false)}>
   <form class="flex flex-col gap-4" onsubmit={submit}>
-    <Input label="Name" bind:value={name} placeholder="e.g. Nubank" required />
-    <Input label="Credit limit" type="number" step="0.01" bind:value={creditLimit} placeholder="0.00" />
+    <Input label={m.field_name()} bind:value={name} placeholder={m.placeholder_card_name()} required />
+    <Input label={m.field_credit_limit()} type="number" step="0.01" bind:value={creditLimit} placeholder="0.00" />
     <div class="flex gap-3">
-      <Input label="Closing day" type="number" min="1" max="31" bind:value={closingDay} />
-      <Input label="Due day" type="number" min="1" max="31" bind:value={dueDay} />
+      <Input label={m.field_closing_day()} type="number" min="1" max="31" bind:value={closingDay} />
+      <Input label={m.field_due_day()} type="number" min="1" max="31" bind:value={dueDay} />
     </div>
-    <Select label="Payment account" bind:value={paymentAccountId} options={accountOptions} />
+    <Select label={m.field_payment_account()} bind:value={paymentAccountId} options={accountOptions} />
     <div class="flex justify-end gap-2 pt-2">
-      <Button type="button" variant="secondary" onclick={() => (showForm = false)}>Cancel</Button>
-      <Button type="submit" loading={cards.saving}>{editing ? "Save" : "Create"}</Button>
+      <Button type="button" variant="secondary" onclick={() => (showForm = false)}>{m.action_cancel()}</Button>
+      <Button type="submit" loading={cards.saving}>{editing ? m.action_save() : m.action_create()}</Button>
     </div>
   </form>
 </Modal>

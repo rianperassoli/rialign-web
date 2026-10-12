@@ -4,6 +4,7 @@
   import Input from "$components/ui/Input.svelte";
   import Select from "$components/ui/Select.svelte";
   import { toDateInput } from "$utils/formatting";
+  import { m } from "$lib/paraglide/messages";
 
   interface Props {
     accounts: Account[];
@@ -15,7 +16,7 @@
 
   let fromAccountId = $state<number | "">("");
   let toAccountId = $state<number | "">("");
-  let description = $state("Transfer");
+  let description = $state(m.transfer_default_description());
   let amount = $state("");
   let date = $state(toDateInput());
 
@@ -26,12 +27,12 @@
 
   function validate(): string[] {
     const e: string[] = [];
-    if (fromAccountId === "") e.push("Select the source account.");
-    if (toAccountId === "") e.push("Select the destination account.");
+    if (fromAccountId === "") e.push(m.transfer_err_from());
+    if (toAccountId === "") e.push(m.transfer_err_to());
     if (fromAccountId !== "" && fromAccountId === toAccountId) {
-      e.push("Source and destination accounts must be different.");
+      e.push(m.transfer_err_same());
     }
-    if (!amount || Number(amount) <= 0) e.push("Amount must be greater than 0.");
+    if (!amount || Number(amount) <= 0) e.push(m.form_err_amount());
     return e;
   }
 
@@ -47,10 +48,10 @@
         to_account_id: Number(toAccountId),
         amount,
         date,
-        description: description.trim() || "Transfer"
+        description: description.trim() || m.transfer_default_description()
       });
     } catch (err) {
-      errors = err instanceof Error && "errors" in err ? (err as { errors: string[] }).errors : ["Could not save."];
+      errors = err instanceof Error && "errors" in err ? (err as { errors: string[] }).errors : [m.form_err_save()];
     } finally {
       submitting = false;
     }
@@ -64,20 +65,30 @@
     </ul>
   {/if}
 
-  <Select label="From account" bind:value={fromAccountId} options={accountOptions} placeholder="Select an account" />
-  <Select label="To account" bind:value={toAccountId} options={accountOptions} placeholder="Select an account" />
+  <Select
+    label={m.transfer_from_account()}
+    bind:value={fromAccountId}
+    options={accountOptions}
+    placeholder={m.placeholder_select_account()}
+  />
+  <Select
+    label={m.transfer_to_account()}
+    bind:value={toAccountId}
+    options={accountOptions}
+    placeholder={m.placeholder_select_account()}
+  />
 
-  <Input label="Description" bind:value={description} placeholder="Transfer" />
+  <Input label={m.field_description()} bind:value={description} placeholder={m.transfer_default_description()} />
 
   <div class="grid grid-cols-2 gap-3">
-    <Input label="Amount" type="number" step="0.01" min="0" bind:value={amount} placeholder="0.00" required />
-    <Input label="Date" type="date" bind:value={date} required />
+    <Input label={m.field_amount()} type="number" step="0.01" min="0" bind:value={amount} placeholder="0.00" required />
+    <Input label={m.field_date()} type="date" bind:value={date} required />
   </div>
 
   <div class="flex justify-end gap-2 pt-2">
     {#if oncancel}
-      <Button type="button" variant="secondary" onclick={oncancel}>Cancel</Button>
+      <Button type="button" variant="secondary" onclick={oncancel}>{m.action_cancel()}</Button>
     {/if}
-    <Button type="submit" variant="neutral" loading={submitting}>Save transfer</Button>
+    <Button type="submit" variant="neutral" loading={submitting}>{m.transfer_submit()}</Button>
   </div>
 </form>

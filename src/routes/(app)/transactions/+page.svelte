@@ -9,6 +9,7 @@
   import Select from "$components/ui/Select.svelte";
   import { useTransactions } from "$composables/useTransactions.svelte";
   import type { PageData } from "./$types";
+  import { m } from "$lib/paraglide/messages";
 
   let { data }: { data: PageData } = $props();
   // SSR seed, read once: from here on the composable owns this state and
@@ -34,7 +35,7 @@
   function requestDelete(transaction: Transaction) {
     if (transaction.series_id) {
       deleting = transaction; // series: ask how much of it to remove
-    } else if (confirm(`Delete "${transaction.description}"?`)) {
+    } else if (confirm(m.activity_delete_confirm({ description: transaction.description }))) {
       tx.remove(transaction.id);
     }
   }
@@ -71,46 +72,46 @@
   }
 </script>
 
-<svelte:head><title>Your activity · Rialign</title></svelte:head>
+<svelte:head><title>{m.activity_page_title()}</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
-  <h1 class="text-2xl font-bold text-ink">Your activity</h1>
-  <Button onclick={() => (showForm = true)}><Plus size={16} aria-hidden="true" />Add transaction</Button>
+  <h1 class="text-2xl font-bold text-ink">{m.activity_heading()}</h1>
+  <Button onclick={() => (showForm = true)}><Plus size={16} aria-hidden="true" />{m.activity_add()}</Button>
 </div>
 
 <div class="mb-4 flex flex-wrap items-end gap-3">
   <div class="flex flex-col gap-1">
-    <label for="search" class="text-sm font-medium text-ink-secondary">Search</label>
+    <label for="search" class="text-sm font-medium text-ink-secondary">{m.filter_search()}</label>
     <input
       id="search"
       bind:value={search}
       oninput={onSearchInput}
-      placeholder="Description…"
+      placeholder={m.filter_search_placeholder()}
       class="rounded-xl border-edge text-sm shadow-xs focus:border-brand-500 focus:ring-brand-500"
     />
   </div>
   <Select
-    label="Type"
+    label={m.field_type()}
     bind:value={kind}
-    placeholder="All types"
+    placeholder={m.filter_all_types()}
     onchange={onFilterChange}
     options={[
-      { value: "income", label: "Income" },
-      { value: "expense", label: "Expense" }
+      { value: "income", label: m.kind_income() },
+      { value: "expense", label: m.kind_expense() }
     ]}
   />
   <Select
-    label="Status"
+    label={m.col_status()}
     bind:value={paid}
-    placeholder="All"
+    placeholder={m.filter_all()}
     onchange={onFilterChange}
     options={[
-      { value: "true", label: "Paid" },
-      { value: "false", label: "Pending" }
+      { value: "true", label: m.status_paid() },
+      { value: "false", label: m.status_pending() }
     ]}
   />
   <div class="flex flex-col gap-1">
-    <label for="month-filter" class="text-sm font-medium text-ink-secondary">Month</label>
+    <label for="month-filter" class="text-sm font-medium text-ink-secondary">{m.filter_month()}</label>
     <input
       id="month-filter"
       type="month"
@@ -135,16 +136,18 @@
 {#if tx.pagination.pages > 1}
   <div class="mt-4 flex items-center justify-center gap-2">
     <Button variant="secondary" size="sm" disabled={!tx.pagination.prev} onclick={() => tx.setPage(tx.pagination.prev!)}>
-      Previous
+      {m.pager_previous()}
     </Button>
-    <span class="text-sm text-ink-muted">Page {tx.pagination.page} of {tx.pagination.pages}</span>
+    <span class="text-sm text-ink-muted">
+      {m.pager_page_of({ page: tx.pagination.page, pages: tx.pagination.pages })}
+    </span>
     <Button variant="secondary" size="sm" disabled={!tx.pagination.next} onclick={() => tx.setPage(tx.pagination.next!)}>
-      Next
+      {m.pager_next()}
     </Button>
   </div>
 {/if}
 
-<Modal open={showForm} title="New transaction" onclose={() => (showForm = false)}>
+<Modal open={showForm} title={m.activity_new_modal()} onclose={() => (showForm = false)}>
   <TransactionForm
     categories={data.categories}
     accounts={data.accounts}
@@ -157,7 +160,7 @@
   />
 </Modal>
 
-<Modal open={editing !== null} title="Edit activity" onclose={() => (editing = null)}>
+<Modal open={editing !== null} title={m.activity_edit_modal()} onclose={() => (editing = null)}>
   {#if editing}
     {@const target = editing}
     <TransactionForm
@@ -174,15 +177,18 @@
   {/if}
 </Modal>
 
-<Modal open={deleting !== null} title="Delete recurring transaction" onclose={() => (deleting = null)}>
+<Modal open={deleting !== null} title={m.activity_delete_series_title()} onclose={() => (deleting = null)}>
   <p class="mb-4 text-sm text-ink-secondary">
-    "{deleting?.description}" is part of a
-    {deleting?.installment_total ? `${deleting.installment_total}x installment plan` : "fixed monthly series"}.
-    What do you want to delete?
+    {deleting?.installment_total
+      ? m.activity_delete_series_installments({
+          description: deleting.description,
+          count: deleting.installment_total
+        })
+      : m.activity_delete_series_fixed({ description: deleting?.description ?? "" })}
   </p>
   <div class="flex flex-col gap-2">
-    <Button variant="secondary" onclick={() => deleteScoped("one")}>Only this one</Button>
-    <Button variant="secondary" onclick={() => deleteScoped("future")}>This and the following</Button>
-    <Button variant="danger" onclick={() => deleteScoped("series")}>All of them</Button>
+    <Button variant="secondary" onclick={() => deleteScoped("one")}>{m.activity_delete_one()}</Button>
+    <Button variant="secondary" onclick={() => deleteScoped("future")}>{m.activity_delete_future()}</Button>
+    <Button variant="danger" onclick={() => deleteScoped("series")}>{m.activity_delete_all()}</Button>
   </div>
 </Modal>

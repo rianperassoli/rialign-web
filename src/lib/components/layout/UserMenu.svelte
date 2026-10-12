@@ -7,13 +7,15 @@
   import Wallet from "@lucide/svelte/icons/wallet";
   import { afterNavigate } from "$app/navigation";
   import { page } from "$app/state";
+  import LocaleToggle from "$components/layout/LocaleToggle.svelte";
   import ThemeToggle from "$components/layout/ThemeToggle.svelte";
+  import { m } from "$lib/paraglide/messages";
 
   const items = [
-    { href: "/accounts", label: "Accounts", icon: Wallet },
-    { href: "/credit_cards", label: "Cards", icon: CreditCard },
-    { href: "/categories", label: "Categories", icon: Tag },
-    { href: "/import", label: "Import", icon: Import }
+    { href: "/accounts", label: m.menu_accounts(), icon: Wallet },
+    { href: "/credit_cards", label: m.menu_cards(), icon: CreditCard },
+    { href: "/categories", label: m.menu_categories(), icon: Tag },
+    { href: "/import", label: m.menu_import(), icon: Import }
   ];
 
   let open = $state(false);
@@ -65,8 +67,13 @@
       <div class="my-1.5 border-t border-edge"></div>
 
       <div class="flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-ink-secondary">
-        Theme
+        {m.menu_theme()}
         <ThemeToggle />
+      </div>
+
+      <div class="flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-ink-secondary">
+        {m.menu_language()}
+        <LocaleToggle />
       </div>
 
       <div class="my-1.5 border-t border-edge"></div>
@@ -77,7 +84,7 @@
           class="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-ink-secondary transition duration-150 hover:bg-hover"
         >
           <LogOut size={15} aria-hidden="true" />
-          Log out
+          {m.menu_log_out()}
         </button>
       </form>
     </div>

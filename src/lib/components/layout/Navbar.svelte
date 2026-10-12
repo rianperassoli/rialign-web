@@ -1,12 +1,13 @@
 <script lang="ts">
   import { page } from "$app/state";
   import UserMenu from "$components/layout/UserMenu.svelte";
+  import { m } from "$lib/paraglide/messages";
 
   // Day-to-day navigation only; setup lives in the Manage menu.
   const links = [
-    { href: "/dashboard", label: "Overview" },
-    { href: "/transactions", label: "Activity" },
-    { href: "/reports", label: "Insights" }
+    { href: "/dashboard", label: m.nav_overview() },
+    { href: "/transactions", label: m.nav_activity() },
+    { href: "/reports", label: m.nav_insights() }
   ];
 </script>
 

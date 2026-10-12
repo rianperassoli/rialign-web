@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { currentMonthParam, formatCurrency, formatDate, maskNumber, parseMoney } from "./formatting";
+import { currentMonthParam, formatCurrency, formatDate, maskNumber, parseMoney, toDateInput } from "./formatting";
+
+// Intl separates the symbol with a non-breaking space; compare on a plain one.
+const plain = (value: string) => value.replace(/\u00a0/g, " ");
 
 describe("parseMoney", () => {
   it("parses decimal strings", () => {
@@ -12,20 +15,29 @@ describe("parseMoney", () => {
 });
 
 describe("formatCurrency", () => {
-  it("formats a money string as USD", () => {
-    expect(formatCurrency("1234.5")).toBe("$1,234.50");
+  it("formats a money string as BRL in the base locale", () => {
+    expect(plain(formatCurrency("1234.5"))).toBe("R$1,234.50");
+  });
+  it("writes the same amount the Brazilian way in pt-BR", () => {
+    expect(plain(formatCurrency("1234.5", { locale: "pt-BR" }))).toBe("R$ 1.234,50");
   });
   it("prefixes a plus sign when signed and positive", () => {
-    expect(formatCurrency("10", { signed: true })).toBe("+$10.00");
+    expect(plain(formatCurrency("10", { signed: true }))).toBe("+R$10.00");
   });
   it("does not prefix negatives", () => {
-    expect(formatCurrency("-10", { signed: true })).toBe("-$10.00");
+    expect(plain(formatCurrency("-10", { signed: true }))).toBe("-R$10.00");
+  });
+  it("honours an explicit currency", () => {
+    expect(formatCurrency("1234.5", { currency: "USD" })).toBe("$1,234.50");
   });
 });
 
 describe("formatDate", () => {
   it("formats an ISO date", () => {
     expect(formatDate("2026-05-27")).toMatch(/May/);
+  });
+  it("follows an explicit locale", () => {
+    expect(formatDate("2026-05-27", "pt-BR")).toMatch(/mai/i);
   });
   it("returns a dash for empty/invalid input", () => {
     expect(formatDate(null)).toBe("—");
@@ -36,6 +48,13 @@ describe("formatDate", () => {
 describe("currentMonthParam", () => {
   it("formats YYYY-MM", () => {
     expect(currentMonthParam(new Date("2026-03-09"))).toBe("2026-03");
+  });
+});
+
+describe("toDateInput", () => {
+  it("uses the local calendar day, not the UTC one", () => {
+    // 22:30 in UTC-3 is already the next day in UTC.
+    expect(toDateInput(new Date(2026, 8, 3, 22, 30))).toBe("2026-09-03");
   });
 });
 

@@ -2,6 +2,7 @@
   import Card from "$components/ui/Card.svelte";
   import { formatCurrency, formatMonth, parseMoney } from "$utils/formatting";
   import type { PageData } from "./$types";
+  import { m } from "$lib/paraglide/messages";
 
   let { data }: { data: PageData } = $props();
 
@@ -31,7 +32,7 @@
   }
 
   const maxValue = $derived(
-    niceCeil(Math.max(...monthly.map((m) => Math.max(parseMoney(m.income), parseMoney(m.expense)))))
+    niceCeil(Math.max(...monthly.map((row) => Math.max(parseMoney(row.income), parseMoney(row.expense)))))
   );
   const plotH = CHART_H - PAD_TOP - PAD_BOTTOM;
 
@@ -73,13 +74,16 @@
   const maxCategory = $derived(Math.max(1, ...categories.map((c) => parseMoney(c.total))));
 </script>
 
-<svelte:head><title>Insights · Rialign</title></svelte:head>
+<svelte:head><title>{m.reports_page_title()}</title></svelte:head>
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h1 class="text-2xl font-bold text-ink">Insights</h1>
+    <h1 class="text-2xl font-bold text-ink">{m.reports_heading()}</h1>
     <p class="text-sm text-ink-muted">
-      {formatMonth(data.report.period.from)} – {formatMonth(data.report.period.to)}
+      {m.reports_period({
+        from: formatMonth(data.report.period.from),
+        to: formatMonth(data.report.period.to)
+      })}
     </p>
   </div>
   <div class="flex gap-1 rounded-xl border border-edge bg-surface p-1">
@@ -92,26 +96,28 @@
           : 'text-ink-secondary hover:bg-hover'}"
         aria-current={data.months === window ? "true" : undefined}
       >
-        {window}m
+        {m.reports_window_months({ count: window })}
       </a>
     {/each}
   </div>
 </div>
 
 <div class="flex flex-col gap-6">
-  <Card title="Income × expenses by month">
+  <Card title={m.reports_chart_title()}>
     <div class="mb-3 flex items-center gap-4 text-xs text-ink-secondary">
       <span class="inline-flex items-center gap-1.5">
-        <span class="size-2.5 rounded-full bg-income" aria-hidden="true"></span> Income
+        <span class="size-2.5 rounded-full bg-income" aria-hidden="true"></span>
+        {m.reports_income()}
       </span>
       <span class="inline-flex items-center gap-1.5">
-        <span class="size-2.5 rounded-full bg-expense" aria-hidden="true"></span> Expenses
+        <span class="size-2.5 rounded-full bg-expense" aria-hidden="true"></span>
+        {m.reports_expenses()}
       </span>
     </div>
 
     <div class="relative overflow-x-auto" bind:clientWidth={containerW}>
       <svg viewBox="0 0 {chartW} {CHART_H}" width={chartW} height={CHART_H} role="img"
-        aria-label="Monthly income and expenses">
+        aria-label={m.reports_chart_label()}>
         <!-- recessive hairline grid + clean tick values -->
         {#each gridLines as frac (frac)}
           {@const y = PAD_TOP + plotH * (1 - frac)}
@@ -120,14 +126,14 @@
         {/each}
         <line x1="0" x2={chartW} y1={PAD_TOP + plotH} y2={PAD_TOP + plotH} stroke="var(--app-edge)" stroke-width="1" />
 
-        {#each monthly as m, i (m.month)}
+        {#each monthly as row, i (row.month)}
           {@const cx = i * slotW + slotW / 2}
           <!-- 2px surface gap between the paired columns -->
-          <path d={columnPath(cx - BAR_W - 1, barHeight(m.income))} class="fill-income" />
-          <path d={columnPath(cx + 1, barHeight(m.expense))} class="fill-expense" />
+          <path d={columnPath(cx - BAR_W - 1, barHeight(row.income))} class="fill-income" />
+          <path d={columnPath(cx + 1, barHeight(row.expense))} class="fill-expense" />
           <text x={cx} y={CHART_H - 8} text-anchor="middle" font-size="11"
             class={hovered === i ? "fill-ink font-medium" : "fill-ink-muted"}>
-            {shortMonth(m.month)}
+            {shortMonth(row.month)}
           </text>
           <!-- hover hit target: the whole month band -->
           <rect
@@ -140,20 +146,20 @@
       </svg>
 
       {#if hovered !== null && hoveredMonth}
-        {@const m = hoveredMonth}
+        {@const row = hoveredMonth}
         <div
           class="pointer-events-none absolute top-0 z-10 w-44 rounded-xl border border-edge bg-surface p-3 text-xs shadow-lg"
           style="left: clamp(0px, calc({((hovered + 0.5) / monthly.length) * 100}% - 88px), calc(100% - 176px))"
         >
-          <p class="mb-1 font-semibold text-ink">{formatMonth(m.month)}</p>
+          <p class="mb-1 font-semibold text-ink">{formatMonth(row.month)}</p>
           <p class="flex justify-between text-ink-secondary">
-            <span>Income</span><span class="font-medium">{formatCurrency(m.income)}</span>
+            <span>{m.reports_income()}</span><span class="font-medium">{formatCurrency(row.income)}</span>
           </p>
           <p class="flex justify-between text-ink-secondary">
-            <span>Expenses</span><span class="font-medium">{formatCurrency(m.expense)}</span>
+            <span>{m.reports_expenses()}</span><span class="font-medium">{formatCurrency(row.expense)}</span>
           </p>
           <p class="mt-1 flex justify-between border-t border-edge-subtle pt-1 text-ink">
-            <span>Net</span><span class="font-semibold">{formatCurrency(m.net)}</span>
+            <span>{m.reports_net()}</span><span class="font-semibold">{formatCurrency(row.net)}</span>
           </p>
         </div>
       {/if}
@@ -161,24 +167,31 @@
 
     <!-- Screen-reader / no-hover fallback for the exact values -->
     <table class="sr-only">
-      <caption>Monthly income and expenses</caption>
-      <thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr></thead>
+      <caption>{m.reports_chart_label()}</caption>
+      <thead>
+        <tr>
+          <th>{m.reports_month()}</th>
+          <th>{m.reports_income()}</th>
+          <th>{m.reports_expenses()}</th>
+          <th>{m.reports_net()}</th>
+        </tr>
+      </thead>
       <tbody>
-        {#each monthly as m (m.month)}
+        {#each monthly as row (row.month)}
           <tr>
-            <td>{formatMonth(m.month)}</td>
-            <td>{formatCurrency(m.income)}</td>
-            <td>{formatCurrency(m.expense)}</td>
-            <td>{formatCurrency(m.net)}</td>
+            <td>{formatMonth(row.month)}</td>
+            <td>{formatCurrency(row.income)}</td>
+            <td>{formatCurrency(row.expense)}</td>
+            <td>{formatCurrency(row.net)}</td>
           </tr>
         {/each}
       </tbody>
     </table>
   </Card>
 
-  <Card title="Expenses by category">
+  <Card title={m.reports_by_category()}>
     {#if categories.length === 0}
-      <p class="py-8 text-center text-sm text-ink-muted">No paid expenses in this period yet.</p>
+      <p class="py-8 text-center text-sm text-ink-muted">{m.reports_empty()}</p>
     {:else}
       <ul class="flex flex-col gap-3">
         {#each categories as cat (cat.category_id)}
